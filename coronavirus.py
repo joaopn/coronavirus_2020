@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
+from matplotlib.lines import Line2D
 
 def download_data_df(case_type = 'confirmed', df_type='field'):
 
@@ -81,7 +82,7 @@ def get_data():
 
 	return df
 
-def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries=None, variable='confirmed', xlim=['2020-02-21','2020-03-17'], ylim=None):
+def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries=None, variable='confirmed', xlim=['2020-02-21','2020-03-17'], ylim=None,ax=None,**kwargs):
 
 	df2 = df[df['Country/Region'].isin(country_list)]
 
@@ -93,12 +94,13 @@ def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries
 	else:
 		x_var = 'date'
 
-	fig = plt.figure(figsize=(8,4))
-	ax = sns.lineplot(data=df2,hue='Country/Region', x=x_var,y=variable)
+	if ax is None:
+		fig = plt.figure(figsize=(8,4))
+
+	ax = sns.lineplot(data=df2,hue='Country/Region', x=x_var,y=variable, ax=ax,**kwargs)
 	
 	#Beautifies plot
 	ax.set_yscale('log')
-	ax = plt.gca()
 	if ylim is not None:
 		ax.set_ylim(ylim)
 	else:
@@ -110,9 +112,10 @@ def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	#ax.autoscale(enable=True,axis='y', tight=True)
 
-def plot_prediction_csv(csv_file, m_range=[1.19,1.28],days=3, title='cases', datatype = 'confirmed'):
+def plot_prediction_csv(csv_file, m_range=[1.19,1.28],days=3, title='cases', datatype = 'confirmed', ax=None, color='r',**kwargs):
 
 	x_min = '2020-03-01'
+	color_pred = sns.set_hls_values(color,l=0.2)
 
 	df = pd.read_csv(csv_file)
 	df['date'] = pd.to_datetime(df['date'])
@@ -127,14 +130,20 @@ def plot_prediction_csv(csv_file, m_range=[1.19,1.28],days=3, title='cases', dat
 		df_pred['prediction_max'][i] = m_range[1]**(i+1)*df[datatype][df.index[-1]]
 	df_pred['prediction'] = (df_pred['prediction_max'] + df_pred['prediction_min'])/2
 
-	plt.figure(figsize=(12,5))
-	plt.bar(data=df, x='date', height=datatype, color='b', label=datatype)
-	plt.bar(data=df_pred, x='date', height='prediction', color='r', label='prediction')
+	if ax is None:
+		plt.figure(figsize=(12,5))
+		ax = plt.gca()
+
+	ax.bar(data=df, x='date', height=datatype, color=color, **kwargs)
+	ax.bar(data=df_pred, x='date', height='prediction', color=color_pred, **kwargs)
 
 	#Beautifies plot
-	ax = plt.gca()
 	ax.set_xlim([pd.Timestamp(x_min), df_pred['date'].max() + pd.to_timedelta(1,unit='d')])
 	ax.set_title(title)
 	ax.set_ylabel('Cases')
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+
+	custom_lines = [Line2D([0], [0], color=color, lw=4),
+                Line2D([0], [0], color=color_pred, lw=4)]
+	ax.legend(custom_lines, ['Confirmed', 'Exponential'])
 

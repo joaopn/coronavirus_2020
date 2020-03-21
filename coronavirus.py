@@ -87,35 +87,49 @@ def get_data():
 
 	return df
 
-def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries=None, variable='confirmed', xmin='2020-02-21', ylim=None,ax=None,savefig=None, **kwargs):
+def plot_countries(df,country_list, lag_countries=None, variable='confirmed', xmin='2020-02-21', ymin=1,ax=None,savefig=None, plot_order=None, plot_color = None, **kwargs):
 
+	#Set defaults
+	if ax is None:
+		fig = plt.figure(figsize=(4.5,3.5))
+
+	if plot_order is None:
+		plot_order = np.arange(len(country_list))
+		
+	if plot_color is None:
+		#plot_color = [plt.get_cmap('viridis')(i) for i in np.arange(len(country_list))]
+		plot_color =  [None for i in range(len(country_list))]
+
+	if ax is None:
+		ax = plt.gca()
+
+	#Copies relevant data and aligns it
 	df2 = df[df['Country/Region'].isin(country_list)]
 
 	if lag_countries is not None:
 		lag_dict = dict(zip(country_list, lag_countries))
 		df2['date_lag'] = df2['date'] - df2['Country/Region'].apply(lambda x:pd.to_timedelta(lag_dict[x], unit='d'))
 		x_var = 'date_lag'
-
 	else:
 		x_var = 'date'
 
-	if ax is None:
-		fig = plt.figure(figsize=(4.5,3.5))
-
-	ax = sns.lineplot(data=df2,hue='Country/Region', x=x_var,y=variable, ax=ax,**kwargs)
+	for i in range(len(country_list)):
+		x_data = df2[df2['Country/Region']==country_list[i]][x_var]
+		y_data = df2[df2['Country/Region']==country_list[i]][variable]
+		ax.plot(x_data,y_data, zorder = plot_order[i], color=plot_color[i], **kwargs)
+	#ax = sns.lineplot(data=df2,hue='Country/Region', x=x_var,y=variable, ax=ax,**kwargs)
 	
 	#Beautifies plot
 	ax.set_yscale('log')
-	if ylim is not None:
-		ax.set_ylim(ylim)
-	else:
-		ax.set_ylim([1,ax.get_ylim()[1]])
 
-	#Sets xlim
+	#Sets limits
 	x_lim_0 = pd.Timestamp(xmin)
-	x_min_1 = df2[x_var].max() + pd.to_timedelta(1, unit='d')
+	x_lim_1 = df2[x_var].max() + pd.to_timedelta(1, unit='d')
+	y_lim_0 = ymin
+	y_lim_1 = np.power(10,np.ceil(np.log10(df2[variable].max())))
 
-	ax.set_xlim([x_lim_0, x_min_1])
+	ax.set_xlim([x_lim_0, x_lim_1])
+	ax.set_ylim([y_lim_0, y_lim_1])
 	ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
 	#ax.xaxis.set_major_locator(mdates.DayLocator())
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
@@ -292,10 +306,15 @@ def update_all(days_pred = 3, m_days = 3):
 	#Restores backend
 	matplotlib.use(old_backend)
 
-def update_local(lang='de'):
+def update_local(lang='all'):
+
+	#Rare actually useful usage of recursion
+	if lang == 'all':
+		update_local('en')
+		update_local('de')
+		return 
 
 	#Plots local short-term forecast
-	
 	if lang == 'en':
 		ylabel_de = 'Confirmed cases in Germany'
 		ylabel_ls = 'Confirmed cases in Lower Saxony'
@@ -303,7 +322,6 @@ def update_local(lang='de'):
 		str_save = 'plots/germany_local_en.png'
 		labels = ['Confirmed cases', 'Forecast']
 		str_ann = 'Updated: ' + datetime.now().strftime("%d/%m/%Y")
-		
 
 	elif lang == 'de':
 		ylabel_de = 'Gesamtzahl bestätigter Fälle in Deutschland'
@@ -327,7 +345,6 @@ def update_local(lang='de'):
 	ax_lowersaxony.set_xlabel(xlabel)
 
 	ax_lowersaxony.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
-
 	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
@@ -343,8 +360,10 @@ def update_local(lang='de'):
 	ax_cases = fig.add_subplot(gs[0])
 	ax_deaths = fig.add_subplot(gs[1])
 	df = get_data()
-	plot_countries(df,countries_list,variable='current', lag_countries=[0,-7,-10], xmin='2020-03-01', ylim=[100,1e5], ax=ax_cases,**{'linewidth':4, 'palette': color_palette})
-	plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xmin='2020-03-09', ylim=[1,1e4],ax=ax_deaths,**{'linewidth':4, 'palette': color_palette})
+	#plot_countries(df,countries_list,variable='current', lag_countries=[0,-7.5,-10], xmin='2020-03-01', ylim=[100,1e5], ax=ax_cases,**{'linewidth':4, 'palette': color_palette})
+	#plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xmin='2020-03-09', ymin=1,ax=ax_deaths,**{'linewidth':4, 'palette': color_palette})
+	plot_countries(df,countries_list,variable='confirmed', lag_countries=[-0.5,-7.5,-10], xmin='2020-03-01', ymin = 100,  ax=ax_cases, plot_order=[100,10,1], plot_color=color_palette, **{'linewidth':4})
+	plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xmin='2020-03-09', ymin = 1, ax=ax_deaths, plot_order=[100,10,1], plot_color=color_palette,  **{'linewidth':4})
 
 	if lang == 'de':
 

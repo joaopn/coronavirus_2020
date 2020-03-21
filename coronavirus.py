@@ -3,6 +3,7 @@ import seaborn as sns
 import scipy.stats as st
 import numpy as np
 import os
+from datetime import datetime
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -116,17 +117,23 @@ def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	#ax.autoscale(enable=True,axis='y', tight=True)
 
+	plt.tight_layout()
+
 	if savefig is not None:
 		plt.savefig(savefig, dpi=200)
 		plt.close('all')
 
-def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confirmed', ax=None, x_min = None, ylabel='cases',color='r', savefig=None, **kwargs):
+def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confirmed', labels = ['Confirmed cases','Forecast'], ax=None, x_min = None,color='r', savefig=None, **kwargs):
 
 	#Parameters
 	interval_cl = 0.95
 	color_m = 'k'
 	color_pred = sns.set_hls_values(color,l=0.2)
 	plt.rcParams.update({'font.size': 8})
+
+	#Default labels
+	str_title = 'Forecast'
+	str_xlabel = 'Date'
 
 	#Parses input
 	if type(file) == str:
@@ -135,7 +142,6 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 		df = file
 	else:
 		TypeError('file is neither a .csv location or a pandas dataframe.')
-
 
 	df['date'] = pd.to_datetime(df['date'])
 
@@ -148,8 +154,6 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 			date_max = df['date'].max()
 
 	#df_pred = pd.DataFrame(columns=['date', 'prediction_min', 'prediction_max'])
-
-
 
 	#Calculates observables
 	df['m'] = df[datatype]/df[datatype].shift(1)
@@ -182,6 +186,8 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 		fig = plt.figure(figsize=(4.5,3.5))
 		ax = plt.gca()
 
+
+
 	#label_1 = 'Confirmed cases' + str(df['date'].iloc[-1])[:-9]
 	# label_1 = 'Confirmed cases'
 	# label_2 = 'Forecast'
@@ -204,9 +210,10 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 	ax.set_xlim([pd.Timestamp(x_min), df['date'].max() + pd.to_timedelta(days_pred + 1,unit='d')])
 	#ax.set_title(title)
 	#ax.set_ylabel(ylabel)
-	ax.set_title(ylabel)
+	ax.set_title(str_title)
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
-	ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	ax.set_xlabel(str_xlabel)
 	#ax.set_xlabel(r"Date $\qquad$")
 	#ax2.set_ylabel('Increase factor ')
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
@@ -215,11 +222,11 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 	#custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
 	#ax2.legend(custom_lines, [label_1, label_2, label_3], framealpha=1, facecolor='white', loc='upper left')
 	custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4)]
-	ax.legend(custom_lines, [label_1, label_2], framealpha=1, facecolor='white', loc='upper left')
+	ax.legend(custom_lines, [labels[0], labels[1]], framealpha=1, facecolor='white', loc='upper left')
 	plt.tight_layout()
 
-	str_ann = 'Updated on ' + str(df['date'].iloc[-1])[:-9] + '\nData source: https://systems.jhu.edu/research/public-health/ncov/'
-	str_ann = 'Data source: https://systems.jhu.edu/research/public-health/ncov/'
+	#str_ann = 'Updated on ' + str(df['date'].iloc[-1])[:-9] + '\nData source: https://systems.jhu.edu/research/public-health/ncov/'
+	#str_ann = 'Data source: https://systems.jhu.edu/research/public-health/ncov/'
 	#ax.annotate(str_ann, xy=(1,-0.02), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 
 	if savefig is not None:
@@ -281,6 +288,42 @@ def update_all(days_pred = 3, m_days = 3):
 
 def plot_local_update(lang='de'):
 
+	#Plots local short-term forecast
+	
+	if lang == 'en':
+		ylabel_de = 'Confirmed cases in Germany'
+		ylabel_ls = 'Confirmed cases in Lower Saxony'
+		str_save = 'plots/germany_local_en.png'
+		labels = ['Confirmed cases', 'Forecast']
+		str_ann = 'Updated: ' + datetime.now().strftime("%d/%m/%Y")
+		
+
+	elif lang == 'de':
+		ylabel_de = 'Gesamtzahl bestätigter Fälle in Deutschland'
+		ylabel_ls = 'Gesamtzahl bestätigter Fälle in Niedersachsen'
+		labels = ['Bestätigte Fälle', 'Vorhersage']
+		str_save = 'plots/germany_local_de.png'
+		str_ann = 'Aktualisiert: ' + datetime.now().strftime("%d/%m/%Y")
+
+	fig = plt.figure(figsize=(9,3.5))
+	gs = fig.add_gridspec(1,2)
+	ax_germany = fig.add_subplot(gs[0])
+	ax_lowersaxony = fig.add_subplot(gs[1])
+
+	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany)
+	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_lowersaxony)
+
+	ax_germany.set_title(ylabel_de)
+	ax_lowersaxony.set_title(ylabel_ls)
+	ax_lowersaxony.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+
+	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+
+	plt.savefig(str_save, dpi=200)
+	plt.close('all')
+
+	#Plots comparison between countries_list
 	countries_list = ['Germany', 'Italy', 'Korea, South']
 
 	fig = plt.figure(figsize=(9,3.5))
@@ -317,26 +360,9 @@ def plot_local_update(lang='de'):
 	ax_cases.set_xticklabels(np.arange(0,30,4))
 	ax_deaths.set_xticklabels(np.arange(0,30,4))
 
-	plt.savefig(str_save, dpi=200)
-	plt.close('all')
+	ax_deaths.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+	ax_cases.annotate('A', xy=(-0.19,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+	ax_deaths.annotate('B', xy=(-0.17,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
-
-	if lang == 'de':
-		ylabel_de = 'Confirmed cases in Germany'
-		ylabel_ls = 'Confirmed cases in Lower Saxony'
-		str_save = 'plots/germany_local_en.png'
-
-	elif lang == 'en':
-		ylabel_de = 'Gesamtzahl bestätigter Fälle in Deutschland'
-		ylabel_ls = 'Gesamtzahl bestätigter Fälle in Niedersachsen'
-		str_save = 'plots/germany_local_de.png'
-
-	fig = plt.figure(figsize=(9,3.5))
-	gs = fig.add_gridspec(1,2)
-	ax_germany = fig.add_subplot(gs[0])
-	ax_lowersaxony = fig.add_subplot(gs[1])
-
-	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', ylabel=ylabel_de, ax=ax_germany)
-	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', ylabel=ylabel_ls, ax=ax_lowersaxony)
 	plt.savefig(str_save, dpi=200)
 	plt.close('all')

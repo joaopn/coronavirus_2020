@@ -179,8 +179,10 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 		ax = plt.gca()
 
 	#label_1 = 'Confirmed cases' + str(df['date'].iloc[-1])[:-9]
-	label_1 = 'Confirmed cases'
-	label_2 = 'Forecast'
+	# label_1 = 'Confirmed cases'
+	# label_2 = 'Forecast'
+	label_1 = 'Bestätigte Fälle'
+	label_2 = 'Vorhersage'
 	#label_2 = 'Prediction (previous {:d} days)'.format(m_days)
 	#label_3 = 'Increase factor (previous {:d} days)'.format(m_days)
 
@@ -199,7 +201,8 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 	#ax.set_title(title)
 	#ax.set_ylabel(ylabel)
 	ax.set_title(ylabel)
-	ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	#ax.set_xlabel(r"Date $\qquad$")
 	#ax2.set_ylabel('Increase factor ')
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))

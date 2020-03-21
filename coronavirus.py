@@ -116,12 +116,13 @@ def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	#ax.autoscale(enable=True,axis='y', tight=True)
 
-def plot_prediction(file, days_pred = 3, m_days=3, title='cases', datatype = 'confirmed', ax=None, x_min = None, ylabel='cases',color='r', savefig=None, **kwargs):
+def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confirmed', ax=None, x_min = None, ylabel='cases',color='r', savefig=None, **kwargs):
 
 	#Parameters
 	interval_cl = 0.95
 	color_m = 'k'
 	color_pred = sns.set_hls_values(color,l=0.2)
+	plt.rcParams.update({'font.size': 8})
 
 	#Parses input
 	if type(file) == str:
@@ -174,38 +175,48 @@ def plot_prediction(file, days_pred = 3, m_days=3, title='cases', datatype = 'co
 	# df_pred['prediction'] = (df_pred['prediction_max'] + df_pred['prediction_min'])/2
 
 	if ax is None:
-		plt.figure(figsize=(8,6))
+		fig = plt.figure(figsize=(4.5,3.5))
 		ax = plt.gca()
 
-	label_1 = 'Data updated on ' + str(df['date'].iloc[-1])[:-9]
-	label_2 = 'Prediction (previous {:d} days)'.format(m_days)
-	label_3 = 'Increase factor (previous {:d} days)'.format(m_days)
+	#label_1 = 'Confirmed cases' + str(df['date'].iloc[-1])[:-9]
+	label_1 = 'Confirmed cases'
+	label_2 = 'Forecast'
+	#label_2 = 'Prediction (previous {:d} days)'.format(m_days)
+	#label_3 = 'Increase factor (previous {:d} days)'.format(m_days)
 
 	ax.bar(data=df, x='date', height=datatype, color=color,**kwargs)
-	ax.plot(df['date'], df['prediction'], color=color_pred,lw=3,**kwargs)
+	#ax.plot(df['date'], df['prediction'], color=color_pred,lw=3,**kwargs)
 	ax.bar(data=df_pred, x='date', height='prediction', color=color_pred,**kwargs)
-	ax2 = ax.twinx() 
-	ax2.plot(df['date'], df['m_median'], '--', color=color_m, lw=2)
+	#ax2 = ax.twinx() 
+	#ax2.plot(df['date'], df['m_median'], '--', color=color_m, lw=2)
 	#ax2.plot(df['date'], df['increase_p'], '--', color=color_m, label='Z')
 	#ax2.set_ylim([0,3])
-	ax2.tick_params(axis='y', labelcolor=color_m)
+	#ax2.tick_params(axis='y', labelcolor=color_m)
 
 	#Beautifies plot
-	#ax.set_xlim([pd.Timestamp(x_min), df_pred['date'].max() + pd.to_timedelta(1,unit='d')])
+	ax.set_xlim([pd.Timestamp(x_min), df_pred['date'].max() + pd.to_timedelta(1,unit='d')])
 	ax.set_xlim([pd.Timestamp(x_min), df['date'].max() + pd.to_timedelta(days_pred + 1,unit='d')])
-	ax.set_title(title)
-	ax.set_ylabel(ylabel)
-	ax2.set_ylabel('Increase factor ')
+	#ax.set_title(title)
+	#ax.set_ylabel(ylabel)
+	ax.set_title(ylabel)
+	ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	#ax.set_xlabel(r"Date $\qquad$")
+	#ax2.set_ylabel('Increase factor ')
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	#fig.tight_layout()
 
-	custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
-	ax2.legend(custom_lines, [label_1, label_2, label_3], framealpha=1, facecolor='white', loc='upper left')
+	#custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
+	#ax2.legend(custom_lines, [label_1, label_2, label_3], framealpha=1, facecolor='white', loc='upper left')
+	custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4)]
+	ax.legend(custom_lines, [label_1, label_2], framealpha=1, facecolor='white', loc='upper left')
+	plt.tight_layout()
 
-	str_ann = 'Source: John Hopkins University'
-	ax.annotate(str_ann, xy=(1,0), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+	str_ann = 'Updated on ' + str(df['date'].iloc[-1])[:-9] + '\nData source: https://systems.jhu.edu/research/public-health/ncov/'
+	str_ann = 'Data source: https://systems.jhu.edu/research/public-health/ncov/'
+	#ax.annotate(str_ann, xy=(1,-0.02), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 
 	if savefig is not None:
-		plt.savefig(savefig)
+		plt.savefig(savefig, dpi=200)
 		plt.close('all')
 
 def update_all(days_pred = 3, m_days = 3):
@@ -227,6 +238,8 @@ def update_all(days_pred = 3, m_days = 3):
 	df = get_data()
 	country_list = df['Country/Region'].unique().tolist()
 	del df
+
+	country_list = [s.replace('*','') for s in country_list]
 
 	#Sets up specific x_min for certain countries
 	x_min = dict.fromkeys(country_list)

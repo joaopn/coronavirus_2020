@@ -293,6 +293,7 @@ def plot_local_update(lang='de'):
 	if lang == 'en':
 		ylabel_de = 'Confirmed cases in Germany'
 		ylabel_ls = 'Confirmed cases in Lower Saxony'
+		xlabel = 'Date'
 		str_save = 'plots/germany_local_en.png'
 		labels = ['Confirmed cases', 'Forecast']
 		str_ann = 'Updated: ' + datetime.now().strftime("%d/%m/%Y")
@@ -301,6 +302,7 @@ def plot_local_update(lang='de'):
 	elif lang == 'de':
 		ylabel_de = 'Gesamtzahl bestätigter Fälle in Deutschland'
 		ylabel_ls = 'Gesamtzahl bestätigter Fälle in Niedersachsen'
+		xlabel = 'Datum'
 		labels = ['Bestätigte Fälle', 'Vorhersage']
 		str_save = 'plots/germany_local_de.png'
 		str_ann = 'Aktualisiert: ' + datetime.now().strftime("%d/%m/%Y")
@@ -315,6 +317,9 @@ def plot_local_update(lang='de'):
 
 	ax_germany.set_title(ylabel_de)
 	ax_lowersaxony.set_title(ylabel_ls)
+	ax_germany.set_xlabel(xlabel)
+	ax_lowersaxony.set_xlabel(xlabel)
+
 	ax_lowersaxony.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 
 	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')

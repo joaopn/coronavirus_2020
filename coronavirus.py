@@ -279,7 +279,7 @@ def update_all(days_pred = 3, m_days = 3):
 	#Restores backend
 	matplotlib.use(old_backend)
 
-def plot_evolution(lang='de'):
+def plot_local_update(lang='de'):
 
 	countries_list = ['Germany', 'Italy', 'Korea, South']
 
@@ -317,5 +317,26 @@ def plot_evolution(lang='de'):
 	ax_cases.set_xticklabels(np.arange(0,30,4))
 	ax_deaths.set_xticklabels(np.arange(0,30,4))
 
+	plt.savefig(str_save, dpi=200)
+	plt.close('all')
+
+
+	if lang == 'de':
+		ylabel_de = 'Confirmed cases in Germany'
+		ylabel_ls = 'Confirmed cases in Lower Saxony'
+		str_save = 'plots/germany_local_en.png'
+
+	elif lang == 'en':
+		ylabel_de = 'Gesamtzahl bestätigter Fälle in Deutschland'
+		ylabel_ls = 'Gesamtzahl bestätigter Fälle in Niedersachsen'
+		str_save = 'plots/germany_local_de.png'
+
+	fig = plt.figure(figsize=(9,3.5))
+	gs = fig.add_gridspec(1,2)
+	ax_germany = fig.add_subplot(gs[0])
+	ax_lowersaxony = fig.add_subplot(gs[1])
+
+	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', ylabel=ylabel_de, ax=ax_germany)
+	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', ylabel=ylabel_ls, ax=ax_lowersaxony)
 	plt.savefig(str_save, dpi=200)
 	plt.close('all')

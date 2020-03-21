@@ -272,6 +272,8 @@ def update_all(days_pred = 3, m_days = 3):
 	x_min['Sweden'] = '2020-03-01'
 	x_min['US'] = '2020-03-01'
 
+	labels = ['Confirmed cases', 'Forecast']
+
 	#Saves countries to unique csv files
 	save_csv(country_list)
 
@@ -284,13 +286,13 @@ def update_all(days_pred = 3, m_days = 3):
 		for datatype in datatypes:
 			file_load = 'data/johnhopkins/' + country.lower() + '_' + datatype + '.csv'
 			plot_save = folder + country.lower() + '_' + datatype  + '.png'
-			plot_prediction(file_load, days_pred, m_days, country, datatype, savefig=plot_save, x_min=x_min[country], ylabel=ylabel[datatype])
+			plot_prediction(file_load, days_pred, m_days, country, datatype, savefig=plot_save, x_min=x_min[country], labels=labels)
 
 
 	#Restores backend
 	matplotlib.use(old_backend)
 
-def plot_local_update(lang='de'):
+def update_local(lang='de'):
 
 	#Plots local short-term forecast
 	
@@ -351,7 +353,7 @@ def plot_local_update(lang='de'):
 		ax_cases.set_xlabel('Tage seit dem 100. Krankheitsfall')
 		ax_cases.set_title('Coronaerkrankungen')
 		ax_deaths.set_xlabel('Tage seit dem 1. Todesfall')
-		ax_deaths.set_title('Tode')
+		ax_deaths.set_title('Todesfälle')
 
 		str_save = 'plots/evolution_de.png'
 

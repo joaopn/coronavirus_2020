@@ -86,7 +86,7 @@ def get_data():
 
 	return df
 
-def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries=None, variable='confirmed', xlim=['2020-02-21','2020-03-17'], ylim=None,ax=None,**kwargs):
+def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries=None, variable='confirmed', xlim=['2020-02-21','2020-03-17'], ylim=None,ax=None,savefig=None, **kwargs):
 
 	df2 = df[df['Country/Region'].isin(country_list)]
 
@@ -99,7 +99,7 @@ def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries
 		x_var = 'date'
 
 	if ax is None:
-		fig = plt.figure(figsize=(8,4))
+		fig = plt.figure(figsize=(4.5,3.5))
 
 	ax = sns.lineplot(data=df2,hue='Country/Region', x=x_var,y=variable, ax=ax,**kwargs)
 	
@@ -115,6 +115,10 @@ def plot_countries(df,country_list=['Germany', 'Italy', 'France'], lag_countries
 	#ax.xaxis.set_major_locator(mdates.DayLocator())
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	#ax.autoscale(enable=True,axis='y', tight=True)
+
+	if savefig is not None:
+		plt.savefig(savefig, dpi=200)
+		plt.close('all')
 
 def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confirmed', ax=None, x_min = None, ylabel='cases',color='r', savefig=None, **kwargs):
 
@@ -274,3 +278,44 @@ def update_all(days_pred = 3, m_days = 3):
 
 	#Restores backend
 	matplotlib.use(old_backend)
+
+def plot_evolution(lang='de'):
+
+	countries_list = ['Germany', 'Italy', 'Korea, South']
+
+	fig = plt.figure(figsize=(9,3.5))
+	gs = fig.add_gridspec(1,2)
+	ax_cases = fig.add_subplot(gs[0])
+	ax_deaths = fig.add_subplot(gs[1])
+	df = get_data()
+	plot_countries(df,countries_list,variable='current', lag_countries=[0,-7,-10], xlim=['2020-03-01','2020-03-31'], ylim=[100,1e5], ax=ax_cases,**{'linewidth':4})
+	plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xlim=['2020-03-09','2020-04-08'], ylim=[1,1e4],ax=ax_deaths,**{'linewidth':4})
+
+	plt.tight_layout()
+
+	if lang == 'de':
+
+		ax_cases.legend(['Deutschland','Italien', 'Südkorea'])
+		ax_deaths.legend(['Deutschland','Italien', 'Südkorea'])
+		ax_cases.set_xlabel('Tage seit dem 100. Krankheitsfall')
+		ax_cases.set_ylabel('Coronaerkrankungen')
+		ax_deaths.set_xlabel('Tage seit dem 1. Todesfall')
+		ax_deaths.set_ylabel('Tode')
+
+		str_save = 'plots/evolution_de.png'
+
+	elif lang == 'en':
+		ax_cases.legend(['Germany','Italy', 'South Korea'])
+		ax_deaths.legend(['Germany','Italy', 'South Korea'])
+		ax_cases.set_xlabel('Days since 100th case')
+		ax_cases.set_ylabel('Confirmed cases')
+		ax_deaths.set_xlabel('Days since 1st death')
+		ax_deaths.set_ylabel('Deaths')
+
+		str_save = 'plots/evolution_en.png'
+
+	ax_cases.set_xticklabels(np.arange(0,30,4))
+	ax_deaths.set_xticklabels(np.arange(0,30,4))
+
+	plt.savefig(str_save, dpi=200)
+	plt.close('all')

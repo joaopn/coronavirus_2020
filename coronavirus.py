@@ -252,6 +252,125 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 		plt.savefig(savefig, dpi=200)
 		plt.close('all')
 
+def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'confirmed', labels = ['Confirmed cases','Forecast', 'Average increase (%)'], ax=None, x_min = None,color='r', savefig=None, **kwargs):
+
+	#Parameters
+	interval_cl = 0.95
+	color_m = 'b'
+	color_pred = sns.set_hls_values(color,l=0.2)
+	plt.rcParams.update({'font.size': 8})
+
+	#Default labels
+	str_title = 'Forecast'
+	str_xlabel = 'Date'
+
+	#Parses input
+	if type(file) == str:
+		df = pd.read_csv(file)
+	elif type(file) == pd.core.frame.DataFrame:
+		df = file
+	else:
+		TypeError('file is neither a .csv location or a pandas dataframe.')
+
+	df['date'] = pd.to_datetime(df['date'])
+
+	if x_min is None:
+		if (df[datatype] > 0).any():
+			x_min = df[df[datatype] > 0]['date'].min()
+			date_max = df['date'].max()
+		else:
+			x_min = df['date'].min()
+			date_max = df['date'].max()
+
+	#df_pred = pd.DataFrame(columns=['date', 'prediction_min', 'prediction_max'])
+
+	#Calculates observables
+	df['m'] = df[datatype]/df[datatype].shift(1)
+	df['m_median'] = df['m'].rolling(m_days).median()
+	df['m_median_p'] = 100*(df['m_median'] - 1)
+	df['m_cl0'] = df['m'].rolling(m_days).apply(lambda x: st.t.interval(interval_cl, len(x)-1, loc=np.mean(x), scale=st.sem(x))[0])
+	df['m_cl1'] = df['m'].rolling(m_days).apply(lambda x: st.t.interval(interval_cl, len(x)-1, loc=np.mean(x), scale=st.sem(x))[1])
+	df['m_std'] = df['m'].rolling(m_days).std()
+	df['increase_p'] = 100*(df['m']-1)
+
+	df['prediction'] = df[datatype].shift(1)*df['m_median'].shift(1)
+
+	#Uses last m, and calculades predictions on a new df
+	m_last = df['m_median'].iloc[-1]
+	data_last = df[datatype].iloc[-1]
+	date_last = df['date'].iloc[-1]
+	df_pred = df[['date', 'prediction']]
+
+	df_pred_temp = pd.DataFrame(columns=['date', 'prediction'])
+	df_pred_temp['date'] = [date_last + pd.to_timedelta(i,unit='d') for i in range(days_pred)]
+	df_pred_temp['prediction'] = [data_last*m_last**(i) for i in range(days_pred)]
+	df_pred = df_pred.append(df_pred_temp)
+
+
+	# #df_pred = pd.DataFrame(columns=['date', 'prediction'])
+	# date_min = df['date'].max() + pd.to_timedelta(1,unit='d')
+	# df_pred['date'] = pd.date_range(start=date_min,periods=days_pred)
+	# for i in range(days_pred):
+	# 	df_pred['prediction'][i] = m_last**(i+1)*data_last
+
+
+	# for i in range(days):
+	# 	df_pred['prediction_min'][i] = m_range[0]**(i+1)*df[datatype][df.index[-1]]
+	# 	df_pred['prediction_max'][i] = m_range[1]**(i+1)*df[datatype][df.index[-1]]
+	# df_pred['prediction'] = (df_pred['prediction_max'] + df_pred['prediction_min'])/2
+
+	if ax is None:
+		fig = plt.figure(figsize=(4.5,3.5))
+		ax = plt.gca()
+
+
+
+	#label_1 = 'Confirmed cases' + str(df['date'].iloc[-1])[:-9]
+	# label_1 = 'Confirmed cases'
+	# label_2 = 'Forecast'
+	label_1 = 'Bestätigte Fälle'
+	label_2 = 'Vorhersage'
+	#label_2 = 'Prediction (previous {:d} days)'.format(m_days)
+	#label_3 = 'Increase factor (previous {:d} days)'.format(m_days)
+
+	ax.bar(data=df, x='date', height=datatype, color=color,**kwargs)
+	ax.plot(df_pred['date'], df_pred['prediction'], color=color_pred,lw=3,**kwargs)
+	#ax.bar(data=df_pred, x='date', height='prediction', color=color_pred,**kwargs)
+
+	ax2 = ax.twinx() 
+	ax2.plot(df['date'], df['m_median_p'], '--', color=color_m, lw=2)
+	#ax2.plot(df['date'], df['increase_p'], '--', color=color_m, label='Z')
+	#ax2.set_ylim([0,3])
+	ax2.tick_params(axis='y', labelcolor=color_m)
+
+	#Beautifies plot
+	ax.set_xlim([pd.Timestamp(x_min), df_pred['date'].max() + pd.to_timedelta(1,unit='d')])
+	ax.set_xlim([pd.Timestamp(x_min), df['date'].max() + pd.to_timedelta(days_pred + 1,unit='d')])
+	#ax.set_title(title)
+	#ax.set_ylabel(ylabel)
+	ax.set_title(str_title)
+	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
+	ax.set_xlabel(str_xlabel)
+	#ax.set_xlabel(r"Date $\qquad$")
+	#ax2.set_ylabel('Increase (%)')
+	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	#fig.tight_layout()
+
+	#custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
+	#ax2.legend(custom_lines, [label_1, label_2, label_3], framealpha=1, facecolor='white', loc='upper left')
+	custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
+	ax.legend(custom_lines, [labels[0], labels[1], labels[2]], framealpha=0, facecolor='white', loc='upper left')
+	plt.tight_layout()
+
+	#str_ann = 'Updated on ' + str(df['date'].iloc[-1])[:-9] + '\nData source: https://systems.jhu.edu/research/public-health/ncov/'
+	#str_ann = 'Data source: https://systems.jhu.edu/research/public-health/ncov/'
+	#ax.annotate(str_ann, xy=(1,-0.02), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+
+	if savefig is not None:
+		plt.savefig(savefig, dpi=200)
+		plt.close('all')
+
 def update_all(days_pred = 3, m_days = 3):
 
 	#Sets backend
@@ -321,7 +440,9 @@ def update_local(lang='all'):
 		ylabel_ls = 'Confirmed cases in Lower Saxony'
 		xlabel = 'Date'
 		str_save = 'plots/germany_local_en.png'
+		str_save_m = 'plots/germany_local_pred_en.png'
 		labels = ['Confirmed cases', 'Forecast']
+		labels_m = ['Confirmed cases', 'Forecast', 'Average increase (%)']
 		str_ann = 'Updated: ' + datetime.now().strftime("%d/%m/%Y")
 
 	elif lang == 'de':
@@ -329,7 +450,9 @@ def update_local(lang='all'):
 		ylabel_ls = 'Gesamtzahl bestätigter Fälle in Niedersachsen'
 		xlabel = 'Datum'
 		labels = ['Bestätigte Fälle', 'Vorhersage']
+		labels_m = ['Bestätigte Fälle', 'Vorhersage', 'Durchschnittlicher Anstieg (%)']
 		str_save = 'plots/germany_local_de.png'
+		str_save_m = 'plots/germany_local_pred_de.png'
 		str_ann = 'Aktualisiert: ' + datetime.now().strftime("%d/%m/%Y")
 
 	fig = plt.figure(figsize=(9,3.5))
@@ -350,6 +473,27 @@ def update_local(lang='all'):
 	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
 	plt.savefig(str_save, dpi=200)
+	plt.close('all')
+
+
+	fig = plt.figure(figsize=(9,3.5))
+	gs = fig.add_gridspec(1,2)
+	ax_germany = fig.add_subplot(gs[0])
+	ax_lowersaxony = fig.add_subplot(gs[1])
+
+	plot_prediction_m('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_germany)
+	plot_prediction_m('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_lowersaxony)
+
+	ax_germany.set_title(ylabel_de)
+	ax_lowersaxony.set_title(ylabel_ls)
+	ax_germany.set_xlabel(xlabel)
+	ax_lowersaxony.set_xlabel(xlabel)
+
+	ax_lowersaxony.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+
+	plt.savefig(str_save_m, dpi=200)
 	plt.close('all')
 
 	#Plots comparison between countries_list

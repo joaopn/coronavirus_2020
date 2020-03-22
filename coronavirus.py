@@ -4,6 +4,7 @@ import scipy.stats as st
 import numpy as np
 import os
 from datetime import datetime
+import requests
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 from matplotlib.lines import Line2D
 
-def download_data_df(case_type = 'confirmed', df_type='field'):
+def download_johnhopkins(case_type = 'confirmed', df_type='field'):
 
 	#Downloads data
 	if case_type == 'confirmed':
@@ -64,9 +65,9 @@ def get_data():
 
 	data_types = ['confirmed', 'recovered', 'deaths']
 
-	df = download_data_df('confirmed', 'field')
-	df2 = download_data_df('recovered', 'field')
-	df3 = download_data_df('deaths', 'field')
+	df = download_johnhopkins('confirmed', 'field')
+	df2 = download_johnhopkins('recovered', 'field')
+	df3 = download_johnhopkins('deaths', 'field')
 
 	#TODO: check dfs are equal
 
@@ -399,3 +400,28 @@ def update_local(lang='all'):
 
 	plt.savefig(str_save, dpi=200)
 	plt.close('all')
+
+def update_state(file='data/deutschland_bundeslaendern.csv'):
+
+	#Queries arcgis
+	url = ''
+
+	current_data_list = requests.get(url).json()['features']
+
+def update_landkreis(file='data/deutschland_landkreis.csv'):
+
+	#Loads data into df
+	df = pd.read_csv(file)
+
+	#Queries arcgis
+	url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=0%3D0&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=GEN%2C+cases%2C+deaths%2C+EWZ%2C+county&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token='
+
+	current_data_list = requests.get(url).json()['features']
+
+	#Stores current data on a df
+	pass
+	
+	#Checks if last date on df is equal to current. If yes, overwrites entries. Adds new entries to df otherwise.
+	pass
+
+	#Saves df to file

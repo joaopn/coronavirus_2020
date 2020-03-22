@@ -56,9 +56,11 @@ def save_csv(countries=['Germany']):
 		os.makedirs(folder)
 
 	df = get_data()
+
 	for country in countries:
+
 		for datatype in datatypes:
-			file_save = folder + country.lower() + '_' + datatype + '.csv'
+			file_save = folder + country.replace('*','').lower() + '_' + datatype + '.csv'
 			df[df['Country/Region']==country][['date',datatype]].to_csv(file_save, index=False)
 
 def get_data():
@@ -151,7 +153,6 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 	plt.rcParams.update({'font.size': 8})
 
 	#Default labels
-	str_title = 'Forecast'
 	str_xlabel = 'Date'
 
 	#Parses input
@@ -229,7 +230,7 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 	ax.set_xlim([pd.Timestamp(x_min), df['date'].max() + pd.to_timedelta(days_pred + 1,unit='d')])
 	#ax.set_title(title)
 	#ax.set_ylabel(ylabel)
-	ax.set_title(str_title)
+	ax.set_title(title)
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	ax.set_xlabel(str_xlabel)
@@ -261,7 +262,6 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 	plt.rcParams.update({'font.size': 8})
 
 	#Default labels
-	str_title = 'Forecast'
 	str_xlabel = 'Date'
 
 	#Parses input
@@ -348,7 +348,7 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 	ax.set_xlim([pd.Timestamp(x_min), df['date'].max() + pd.to_timedelta(days_pred + 1,unit='d')])
 	#ax.set_title(title)
 	#ax.set_ylabel(ylabel)
-	ax.set_title(str_title)
+	ax.set_title(title)
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	ax.set_xlabel(str_xlabel)
@@ -371,7 +371,7 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 		plt.savefig(savefig, dpi=200)
 		plt.close('all')
 
-def update_all(days_pred = 3, m_days = 3):
+def update_countries(days_pred = 3, m_days = 3):
 
 	#Sets backend
 	old_backend = matplotlib.get_backend()
@@ -391,7 +391,7 @@ def update_all(days_pred = 3, m_days = 3):
 	country_list = df['Country/Region'].unique().tolist()
 	del df
 
-	country_list = [s.replace('*','') for s in country_list]
+	#country_list = [s.replace('*','') for s in country_list]
 
 	#Sets up specific x_min for certain countries
 	x_min = dict.fromkeys(country_list)
@@ -406,7 +406,7 @@ def update_all(days_pred = 3, m_days = 3):
 	x_min['Sweden'] = '2020-03-01'
 	x_min['US'] = '2020-03-01'
 
-	labels = ['Confirmed cases', 'Forecast']
+	labels = ['Confirmed','Forecast', 'Average increase (%)']
 
 	#Saves countries to unique csv files
 	save_csv(country_list)
@@ -418,9 +418,9 @@ def update_all(days_pred = 3, m_days = 3):
 
 	for country in country_list:
 		for datatype in datatypes:
-			file_load = 'data/johnhopkins/' + country.lower() + '_' + datatype + '.csv'
-			plot_save = folder + country.lower() + '_' + datatype  + '.png'
-			plot_prediction(file_load, days_pred, m_days, country, datatype, savefig=plot_save, x_min=x_min[country], labels=labels)
+			file_load = 'data/johnhopkins/' + country.replace('*','').lower() + '_' + datatype + '.csv'
+			plot_save = folder + country.replace('*','').lower() + '_' + datatype  + '.png'
+			plot_prediction_m(file_load, days_pred, m_days, country, datatype, savefig=plot_save, x_min=x_min[country], labels=labels)
 
 
 	#Restores backend

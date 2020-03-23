@@ -230,7 +230,8 @@ def plot_prediction(file, days_pred = 3, m_days=3, title=None, datatype = 'confi
 	ax.set_xlim([pd.Timestamp(x_min), df['date'].max() + pd.to_timedelta(days_pred + 1,unit='d')])
 	#ax.set_title(title)
 	#ax.set_ylabel(ylabel)
-	ax.set_title(title)
+	if title is not None:
+		ax.set_title(title)
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Date$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	#ax.set_xlabel(r'$\qquad\qquad\qquad\qquad$Datum$\qquad$ (updated on ' + str(df['date'].iloc[-1])[:-9] + ')')
 	ax.set_xlabel(str_xlabel)
@@ -302,8 +303,8 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 	df_pred = df[['date', 'prediction']]
 
 	df_pred_temp = pd.DataFrame(columns=['date', 'prediction'])
-	df_pred_temp['date'] = [date_last + pd.to_timedelta(i,unit='d') for i in range(days_pred)]
-	df_pred_temp['prediction'] = [data_last*m_last**(i) for i in range(days_pred)]
+	df_pred_temp['date'] = [date_last + pd.to_timedelta(i+1,unit='d') for i in range(days_pred)]
+	df_pred_temp['prediction'] = [data_last*m_last**(i+1) for i in range(days_pred)]
 	df_pred = df_pred.append(df_pred_temp)
 
 
@@ -356,6 +357,7 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 	#ax2.set_ylabel('Increase (%)')
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	#fig.tight_layout()
+	#ax.grid(axis='y', zorder=0)
 
 	#custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
 	#ax2.legend(custom_lines, [label_1, label_2, label_3], framealpha=1, facecolor='white', loc='upper left')
@@ -460,11 +462,9 @@ def update_local(lang='all'):
 	ax_germany = fig.add_subplot(gs[0])
 	ax_lowersaxony = fig.add_subplot(gs[1])
 
-	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany)
-	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_lowersaxony)
+	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany, title=ylabel_de)
+	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_lowersaxony, title = ylabel_ls)
 
-	ax_germany.set_title(ylabel_de)
-	ax_lowersaxony.set_title(ylabel_ls)
 	ax_germany.set_xlabel(xlabel)
 	ax_lowersaxony.set_xlabel(xlabel)
 
@@ -481,11 +481,9 @@ def update_local(lang='all'):
 	ax_germany = fig.add_subplot(gs[0])
 	ax_lowersaxony = fig.add_subplot(gs[1])
 
-	plot_prediction_m('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_germany)
-	plot_prediction_m('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_lowersaxony)
+	plot_prediction_m('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_germany, title=ylabel_de)
+	plot_prediction_m('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_lowersaxony, title = ylabel_ls)
 
-	ax_germany.set_title(ylabel_de)
-	ax_lowersaxony.set_title(ylabel_ls)
 	ax_germany.set_xlabel(xlabel)
 	ax_lowersaxony.set_xlabel(xlabel)
 
@@ -569,3 +567,14 @@ def update_landkreis(file='data/deutschland_landkreis.csv'):
 	pass
 
 	#Saves df to file
+
+
+#Runs coronavirus.py to update plots
+if __name__ == '__main__':
+
+	#Parameters
+	days_pred = 3
+	m_days = 3
+
+	update_local('all')
+	update_countries(days_pred, m_days)

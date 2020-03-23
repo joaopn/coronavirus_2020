@@ -413,7 +413,7 @@ def update_countries(days_pred = 3, m_days = 3):
 	#Saves countries to unique csv files
 	save_csv(country_list)
 
-	#Saves plots
+	#Plots folders
 	folder = 'plots/johnhopkins/'
 	if not os.path.exists(folder):
 		os.makedirs(folder)
@@ -430,6 +430,12 @@ def update_countries(days_pred = 3, m_days = 3):
 
 def update_local(lang='all'):
 
+
+	#folder location
+	folder_current = 'plots/'
+	folder_daily = 'plots/website_daily/'
+
+
 	#Rare actually useful usage of recursion
 	if lang == 'all':
 		update_local('en')
@@ -441,8 +447,8 @@ def update_local(lang='all'):
 		ylabel_de = 'Confirmed cases in Germany'
 		ylabel_ls = 'Confirmed cases in Lower Saxony'
 		xlabel = 'Date'
-		str_save = 'plots/germany_local_en.png'
-		str_save_m = 'plots/germany_local_pred_en.png'
+		str_save = 'germany_local_en'
+		str_save_m = 'germany_local_pred_en'
 		labels = ['Confirmed cases', 'Forecast']
 		labels_m = ['Confirmed cases', 'Forecast', 'Average increase (%)']
 		str_ann = 'Updated: ' + datetime.now().strftime("%d/%m/%Y")
@@ -453,8 +459,8 @@ def update_local(lang='all'):
 		xlabel = 'Datum'
 		labels = ['Bestätigte Fälle', 'Vorhersage']
 		labels_m = ['Bestätigte Fälle', 'Vorhersage', 'Durchschnittlicher Anstieg (%)']
-		str_save = 'plots/germany_local_de.png'
-		str_save_m = 'plots/germany_local_pred_de.png'
+		str_save = 'germany_local_de'
+		str_save_m = 'germany_local_pred_de'
 		str_ann = 'Aktualisiert: ' + datetime.now().strftime("%d/%m/%Y")
 
 	fig = plt.figure(figsize=(9,3.5))
@@ -472,10 +478,12 @@ def update_local(lang='all'):
 	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
-	plt.savefig(str_save, dpi=200)
+	#Saves both current and dated versions
+	plt.savefig(folder_current + str_save + '.png', dpi=200)
+	plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 	plt.close('all')
 
-
+	#Plots prediction with m
 	fig = plt.figure(figsize=(9,3.5))
 	gs = fig.add_gridspec(1,2)
 	ax_germany = fig.add_subplot(gs[0])
@@ -491,7 +499,7 @@ def update_local(lang='all'):
 	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
-	plt.savefig(str_save_m, dpi=200)
+	plt.savefig(folder_current + str_save_m, dpi=200)
 	plt.close('all')
 
 	#Plots comparison between countries_list
@@ -517,7 +525,7 @@ def update_local(lang='all'):
 		ax_deaths.set_xlabel('Tage seit dem 1. Todesfall')
 		ax_deaths.set_title('Todesfälle')
 
-		str_save = 'plots/evolution_de.png'
+		str_save = 'evolution_de'
 
 	elif lang == 'en':
 		ax_cases.legend(['Germany','Italy', 'South Korea'])
@@ -527,7 +535,7 @@ def update_local(lang='all'):
 		ax_deaths.set_xlabel('Days since 1st death')
 		ax_deaths.set_title('Deaths')
 
-		str_save = 'plots/evolution_en.png'
+		str_save = 'evolution_en'
 
 	ax_cases.set_xticklabels(np.arange(0,30,4))
 	ax_deaths.set_xticklabels(np.arange(0,30,4))
@@ -539,18 +547,19 @@ def update_local(lang='all'):
 	ax_deaths.annotate('B', xy=(-0.17,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
 	plt.tight_layout()
+	plt.savefig(folder_current + str_save + '.png', dpi=200)
+	plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 
-	plt.savefig(str_save, dpi=200)
 	plt.close('all')
 
-def update_state(file='data/deutschland_bundeslaendern.csv'):
+def download_state(file='data/deutschland_bundeslaendern.csv'):
 
 	#Queries arcgis
 	url = ''
 
 	current_data_list = requests.get(url).json()['features']
 
-def update_landkreis(file='data/deutschland_landkreis.csv'):
+def download_landkreis(file='data/deutschland_landkreis.csv'):
 
 	#Loads data into df
 	df = pd.read_csv(file)
@@ -568,6 +577,8 @@ def update_landkreis(file='data/deutschland_landkreis.csv'):
 
 	#Saves df to file
 
+def download_rki(file):
+	pass
 
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':

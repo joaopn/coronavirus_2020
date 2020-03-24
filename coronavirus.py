@@ -577,8 +577,9 @@ def download_landkreis(file='data/deutschland_landkreis.csv'):
 
 	#Saves df to file
 
-def download_rki(file):
-	pass
+def download_rki(date):
+	url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0//query?where=Meldedatum%3D%272020-03-21'
+	+ '%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':

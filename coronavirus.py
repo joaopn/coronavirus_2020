@@ -469,7 +469,7 @@ def update_local(lang='all'):
 	ax_lowersaxony = fig.add_subplot(gs[1])
 
 	#Updates Germany data and plots things
-	save_csv(countries=['Germany'])
+	#save_csv(countries=['Germany'])
 	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany, title=ylabel_de)
 	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_lowersaxony, title = ylabel_ls)
 

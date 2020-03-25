@@ -12,7 +12,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 from matplotlib.lines import Line2D
 
-def download_johnhopkins(case_type = 'confirmed', df_type='field'):
+def download_johnhopkins_old(case_type = 'confirmed', df_type='field'):
 
 	#Downloads data
 	if case_type == 'confirmed':
@@ -63,23 +63,70 @@ def save_csv(countries=['Germany']):
 			file_save = folder + country.replace('*','').lower() + '_' + datatype + '.csv'
 			df[df['Country/Region']==country][['date',datatype]].to_csv(file_save, index=False)
 
+def download_johnhopkins(case_type = 'confirmed', df_type='field'):
+
+	#Downloads data
+	if case_type == 'confirmed':
+		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
+	elif case_type == 'deaths':
+		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
+	else:
+		ValueError('Invalid case_type')
+
+	df = pd.read_csv(url, sep=',')
+
+	#Reshapes df
+	if df_type == 'column':
+
+		df = df.drop(columns=['Province/State', 'Lat','Long']).groupby('Country/Region').sum().T
+		df.reset_index(inplace=True)
+		df.rename(columns={'index':'date',"Country/Region":'country'}, inplace=True)
+		df['date'] = pd.to_datetime(df['date'])
+
+	elif df_type == 'field':
+
+		df = df.drop(columns=['Province/State', 'Lat','Long']).groupby('Country/Region').sum().T
+		df.reset_index(inplace=True)
+		df.rename(columns={'index':'date',"Country/Region":'country'}, inplace=True)
+		df['date'] = pd.to_datetime(df['date'])
+		df = pd.melt(df, id_vars = 'date').rename(columns={'value':case_type})
+
+	else:
+		ValueError('Invalid df_type')
+
+	return df
+
+def save_csv(countries=['Germany']):
+
+	#datatypes = ['current', 'confirmed', 'recovered', 'deaths', 'new']
+	datatypes = ['confirmed','deaths','new']
+
+	folder = 'data/johnhopkins/'
+	if not os.path.exists(folder):
+		os.makedirs(folder)
+
+	df = get_data()
+
+	for country in countries:
+
+		for datatype in datatypes:
+			file_save = folder + country.replace('*','').lower() + '_' + datatype + '.csv'
+			df[df['Country/Region']==country][['date',datatype]].to_csv(file_save, index=False)
+
+
 def get_data():
 
-	data_types = ['confirmed', 'recovered', 'deaths']
+	data_types = ['confirmed', 'deaths']
 
 	df = download_johnhopkins('confirmed', 'field')
-	df2 = download_johnhopkins('recovered', 'field')
-	df3 = download_johnhopkins('deaths', 'field')
+	df2 = download_johnhopkins('deaths', 'field')
 
 	#TODO: check dfs are equal
 
 	#Joins data
-	df['recovered'] = df2['recovered']
-	df['deaths'] = df3['deaths']
-	del df2, df3
+	df['deaths'] = df2['deaths']
+	del df2
 
-	#Calculates current infections
-	df['current'] = df['confirmed'] - df['deaths'] - df['recovered']
 
 	#Calculates new infections
 	country_list = df['Country/Region'].unique()
@@ -379,13 +426,18 @@ def update_countries(days_pred = 3, m_days = 3):
 	old_backend = matplotlib.get_backend()
 	matplotlib.use('Agg')
 
-	datatypes = ['current', 'confirmed', 'recovered', 'deaths', 'new']
+	#datatypes = ['current', 'confirmed', 'recovered', 'deaths', 'new']
+	datatypes = ['confirmed', 'deaths', 'new']
 
-	ylabel = {'current':'Current cases',
-	 'confirmed':'Confirmed cases',
-	 'recovered':'Recovered cases',
+	# ylabel = {'current':'Current cases',
+	#  'confirmed':'Confirmed cases',
+	#  'recovered':'Recovered cases',
+	#  'deaths': 'Number of deaths', 
+	#  'new': 'New cases'}
+
+	ylabel = {'confirmed':'Confirmed cases',
 	 'deaths': 'Number of deaths', 
-	 'new': 'New cases'}
+	 'new': 'New cases'}	
 
 
 	#Gets all unique countries
@@ -469,7 +521,7 @@ def update_local(lang='all'):
 	ax_lowersaxony = fig.add_subplot(gs[1])
 
 	#Updates Germany data and plots things
-	#save_csv(countries=['Germany'])
+	save_csv(countries=['Germany'])
 	plot_prediction('data/johnhopkins/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany, title=ylabel_de)
 	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_lowersaxony, title = ylabel_ls)
 

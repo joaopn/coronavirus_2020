@@ -480,8 +480,7 @@ def update_countries(days_pred = 3, m_days = 3):
 	#Restores backend
 	matplotlib.use(old_backend)
 
-def update_local(lang='all'):
-
+def update_local(lang='all', savefig=True):
 
 	#folder location
 	folder_current = 'plots/'
@@ -532,10 +531,13 @@ def update_local(lang='all'):
 	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
+	plt.tight_layout()
+
 	#Saves both current and dated versions
-	plt.savefig(folder_current + str_save + '.png', dpi=200)
-	plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
-	plt.close('all')
+	if savefig:
+		plt.savefig(folder_current + str_save + '.png', dpi=200)
+		plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
+		plt.close('all')
 
 	#Plots prediction with m
 	fig = plt.figure(figsize=(9,3.5))
@@ -552,9 +554,12 @@ def update_local(lang='all'):
 	ax_lowersaxony.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+	
+	plt.tight_layout()
 
-	plt.savefig(folder_current + str_save_m, dpi=200)
-	plt.close('all')
+	if savefig:
+		plt.savefig(folder_current + str_save_m, dpi=200)
+		plt.close('all')
 
 	#Plots comparison between countries_list
 	countries_list = ['Germany', 'Italy', 'Korea, South']
@@ -596,15 +601,16 @@ def update_local(lang='all'):
 	ax_cases.set_ylabel('')
 	ax_deaths.set_ylabel('')
 
-	ax_deaths.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+	ax_deaths.annotate(str_ann, xy=(1,-0.02), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 	ax_cases.annotate('A', xy=(-0.19,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	ax_deaths.annotate('B', xy=(-0.17,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 
 	plt.tight_layout()
-	plt.savefig(folder_current + str_save + '.png', dpi=200)
-	plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 
-	plt.close('all')
+	if savefig:
+		plt.savefig(folder_current + str_save + '.png', dpi=200)
+		plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
+		plt.close('all')
 
 def download_state(file='data/deutschland_bundeslaendern.csv'):
 

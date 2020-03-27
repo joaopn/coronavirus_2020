@@ -3,8 +3,10 @@ import seaborn as sns
 import scipy.stats as st
 import numpy as np
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import requests
+import urllib
+import json
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -637,9 +639,55 @@ def download_landkreis(file='data/deutschland_landkreis.csv'):
 
 	#Saves df to file
 
-def download_rki(date):
-	url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0//query?where=Meldedatum%3D%272020-03-21'
-	+ '%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+def download_rki(single_date):
+	# url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0//query?where=Meldedatum%3D%272020-03-21'
+	# + '%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+
+	list_data = []
+
+	#Creates data list
+	# def daterange(start_date, end_date):
+	# 	for n in range(int ((end_date - start_date).days)):
+	# 		yield start_date + timedelta(n)
+	# start_date = date(2020, 1, 1)
+	# end_date = date.today()
+	# list_data = []
+	# for single_date in daterange(start_date, end_date):
+	# 	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Meldedatum%3D%27'+str(single_date.strftime("%Y-%m-%d"))+'%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+	# 	with urllib.request.urlopen(url_str) as url:
+	# 		json_data = json.loads(url.read().decode())
+	# 		list_data.append(json_data)
+
+	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Meldedatum%3D%27'+ single_date + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+	with urllib.request.urlopen(url_str) as url:
+		json_data = json.loads(url.read().decode())
+		list_data.append(json_data)
+
+	#Parses list of data
+	n_data = len(list_data[0]['features'])
+	data_flat = []
+	data_flat = [list_data[0]['features'][i]['attributes'] for i in range(n_data)]
+
+	return data_flat
+
+def download_rki_landkreis(landkreis='LK Göttingen'):
+	
+	#url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27'+ landkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27LK+G%C3%B6ttingen%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+
+	list_data = []
+
+	url = urllib.request.urlopen(url_str)
+	json_data = json.loads(url.read().decode())
+	list_data.append(json_data)
+
+	#Parses list of data
+	n_data = len(list_data[0]['features'])
+	data_flat = []
+	data_flat = [list_data[0]['features'][i]['attributes'] for i in range(n_data)]
+
+	return pd.DataFrame(data_flat)
+
 
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':

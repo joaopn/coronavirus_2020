@@ -552,6 +552,16 @@ def update_website(lang='all', savefig=True):
 		plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 		plt.close('all')
 
+def plot_evolution_age_rki(file):
+
+	#From PopulationPyramid.net, data from 2019
+	german_distribution_avg = {'A15-A34':0.227686061, 'A35-A59':0.350849027, 'A60-A79':0.214771991, 'A80+':0.06869733, 'A05-A14':0.090251541, 'A00-A04': 0.04774405}
+
+	#Manipulates df
+	df = pd.read_csv(file)
+	df['date'] = pd.to_datetime(df['date'])
+	
+
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':
 

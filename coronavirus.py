@@ -14,40 +14,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 from matplotlib.lines import Line2D
 
-def download_johnhopkins_old(case_type = 'confirmed', df_type='field'):
-
-	#Downloads data
-	if case_type == 'confirmed':
-		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
-	elif case_type == 'recovered':
-		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv'
-	elif case_type == 'deaths':
-		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv'
-	else:
-		ValueError('Invalid case_type')
-
-	df = pd.read_csv(url, sep=',')
-
-	#Reshapes df
-	if df_type == 'column':
-
-		df = df.drop(columns=['Province/State', 'Lat','Long']).groupby('Country/Region').sum().T
-		df.reset_index(inplace=True)
-		df.rename(columns={'index':'date',"Country/Region":'country'}, inplace=True)
-		df['date'] = pd.to_datetime(df['date'])
-
-	elif df_type == 'field':
-
-		df = df.drop(columns=['Province/State', 'Lat','Long']).groupby('Country/Region').sum().T
-		df.reset_index(inplace=True)
-		df.rename(columns={'index':'date',"Country/Region":'country'}, inplace=True)
-		df['date'] = pd.to_datetime(df['date'])
-		df = pd.melt(df, id_vars = 'date').rename(columns={'value':case_type})
-
-	else:
-		ValueError('Invalid df_type')
-
-	return df
+from scrapper import *
 
 def save_csv(countries=['Germany']):
 
@@ -65,39 +32,6 @@ def save_csv(countries=['Germany']):
 			file_save = folder + country.replace('*','').lower() + '_' + datatype + '.csv'
 			df[df['Country/Region']==country][['date',datatype]].to_csv(file_save, index=False)
 
-def download_johnhopkins(case_type = 'confirmed', df_type='field'):
-
-	#Downloads data
-	if case_type == 'confirmed':
-		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
-	elif case_type == 'deaths':
-		url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
-	else:
-		ValueError('Invalid case_type')
-
-	df = pd.read_csv(url, sep=',')
-
-	#Reshapes df
-	if df_type == 'column':
-
-		df = df.drop(columns=['Province/State', 'Lat','Long']).groupby('Country/Region').sum().T
-		df.reset_index(inplace=True)
-		df.rename(columns={'index':'date',"Country/Region":'country'}, inplace=True)
-		df['date'] = pd.to_datetime(df['date'])
-
-	elif df_type == 'field':
-
-		df = df.drop(columns=['Province/State', 'Lat','Long']).groupby('Country/Region').sum().T
-		df.reset_index(inplace=True)
-		df.rename(columns={'index':'date',"Country/Region":'country'}, inplace=True)
-		df['date'] = pd.to_datetime(df['date'])
-		df = pd.melt(df, id_vars = 'date').rename(columns={'value':case_type})
-
-	else:
-		ValueError('Invalid df_type')
-
-	return df
-
 def save_csv(countries=['Germany']):
 
 	#datatypes = ['current', 'confirmed', 'recovered', 'deaths', 'new']
@@ -114,7 +48,6 @@ def save_csv(countries=['Germany']):
 		for datatype in datatypes:
 			file_save = folder + country.replace('*','').lower() + '_' + datatype + '.csv'
 			df[df['Country/Region']==country][['date',datatype]].to_csv(file_save, index=False)
-
 
 def get_data():
 
@@ -482,17 +415,22 @@ def update_countries(days_pred = 3, m_days = 3):
 	#Restores backend
 	matplotlib.use(old_backend)
 
-def update_local(lang='all', savefig=True):
+def update_website(lang='all', savefig=True):
 
 	#folder location
 	folder_current = 'plots/'
 	folder_daily = 'plots/website_daily/'
 
+	#Updates date
+	str_now = datetime.now().strftime("%Y-%m-%d")
+	f = open('.last_updated','w')
+	f.write(str_now)
+	f.close()
 
 	#Rare actually useful usage of recursion
 	if lang == 'all':
-		update_local('en')
-		update_local('de')
+		update_website('en')
+		update_website('de')
 		return 
 
 	#Plots local short-term forecast
@@ -614,81 +552,6 @@ def update_local(lang='all', savefig=True):
 		plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 		plt.close('all')
 
-def download_state(file='data/deutschland_bundeslaendern.csv'):
-
-	#Queries arcgis
-	url = ''
-
-	current_data_list = requests.get(url).json()['features']
-
-def download_landkreis(file='data/deutschland_landkreis.csv'):
-
-	#Loads data into df
-	df = pd.read_csv(file)
-
-	#Queries arcgis
-	url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=0%3D0&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=GEN%2C+cases%2C+deaths%2C+EWZ%2C+county&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token='
-
-	current_data_list = requests.get(url).json()['features']
-
-	#Stores current data on a df
-	pass
-	
-	#Checks if last date on df is equal to current. If yes, overwrites entries. Adds new entries to df otherwise.
-	pass
-
-	#Saves df to file
-
-def download_rki(single_date):
-	# url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0//query?where=Meldedatum%3D%272020-03-21'
-	# + '%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-
-	list_data = []
-
-	#Creates data list
-	# def daterange(start_date, end_date):
-	# 	for n in range(int ((end_date - start_date).days)):
-	# 		yield start_date + timedelta(n)
-	# start_date = date(2020, 1, 1)
-	# end_date = date.today()
-	# list_data = []
-	# for single_date in daterange(start_date, end_date):
-	# 	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Meldedatum%3D%27'+str(single_date.strftime("%Y-%m-%d"))+'%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-	# 	with urllib.request.urlopen(url_str) as url:
-	# 		json_data = json.loads(url.read().decode())
-	# 		list_data.append(json_data)
-
-	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Meldedatum%3D%27'+ single_date + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-	with urllib.request.urlopen(url_str) as url:
-		json_data = json.loads(url.read().decode())
-		list_data.append(json_data)
-
-	#Parses list of data
-	n_data = len(list_data[0]['features'])
-	data_flat = []
-	data_flat = [list_data[0]['features'][i]['attributes'] for i in range(n_data)]
-
-	return data_flat
-
-def download_rki_landkreis(landkreis='LK Göttingen'):
-	
-	#url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27'+ landkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27LK+G%C3%B6ttingen%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-
-	list_data = []
-
-	url = urllib.request.urlopen(url_str)
-	json_data = json.loads(url.read().decode())
-	list_data.append(json_data)
-
-	#Parses list of data
-	n_data = len(list_data[0]['features'])
-	data_flat = []
-	data_flat = [list_data[0]['features'][i]['attributes'] for i in range(n_data)]
-
-	return pd.DataFrame(data_flat)
-
-
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':
 
@@ -696,5 +559,5 @@ if __name__ == '__main__':
 	days_pred = 3
 	m_days = 3
 
-	update_local('all')
+	update_website('all')
 	update_countries(days_pred, m_days)

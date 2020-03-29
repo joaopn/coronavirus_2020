@@ -77,31 +77,6 @@ def download_johnhopkins(case_type = 'confirmed', df_type='field'):
 
 	return df
 
-def download_state(file='data/deutschland_bundeslaendern.csv'):
-
-	#Queries arcgis
-	url = ''
-
-	current_data_list = requests.get(url).json()['features']
-
-def download_landkreis(file='data/deutschland_landkreis.csv'):
-
-	#Loads data into df
-	df = pd.read_csv(file)
-
-	#Queries arcgis
-	url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=0%3D0&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=GEN%2C+cases%2C+deaths%2C+EWZ%2C+county&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token='
-
-	current_data_list = requests.get(url).json()['features']
-
-	#Stores current data on a df
-	pass
-	
-	#Checks if last date on df is equal to current. If yes, overwrites entries. Adds new entries to df otherwise.
-	pass
-
-	#Saves df to file
-
 def download_rki(single_date):
 	# url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0//query?where=Meldedatum%3D%272020-03-21'
 	# + '%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
@@ -135,7 +110,6 @@ def download_rki(single_date):
 
 def download_rki_landkreis(landkreis='LK Göttingen'):
 	
-	#url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27'+ landkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27LK+G%C3%B6ttingen%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 
 	list_data = []
@@ -156,8 +130,6 @@ def download_rki_landkreis(landkreis='LK Göttingen'):
 
 def download_rki_idlandkreis(idlandkreis_list=['03159']):
 	
-	#url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27'+ landkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-
 	df_keys = ['Bundesland', 'Landkreis', 'Altersgruppe', 'Geschlecht', 'AnzahlFall',
        'AnzahlTodesfall', 'Meldedatum', 'NeuerFall']
 
@@ -200,3 +172,32 @@ def download_rki():
 
 	return df
 
+def load_rki_age(file, variable='AnzahlFall'):
+
+	if variable not in ['AnzahlFall', 'AnzahlTodesfall']:
+		ValueError('Invalid variable. Valid options: "AnzahlFall", "AnzahlTodesfall"')
+
+	age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+']
+
+	#Loads df and set dates as datetime
+	df = pd.read_csv(file)
+	df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y')
+
+	#Index for all days
+	idx = pd.date_range(df['date'].min(), df['date'].max())
+
+	#Creates df with only age data
+	df2 = pd.DataFrame(index=idx)
+	for age in age_groups:
+		df_temp = df[df['Altersgruppe']==age].sort_values('date').groupby('date')[['date',variable]].sum()
+		df_temp = df_temp.reindex(idx, fill_value=0)
+		df2[age] = df_temp
+
+	#Calculates daily, total, age_total and age_total_p cols
+	df2['total'] = df2.sum(axis=1).cumsum()
+	df2['daily'] = df2.sum(axis=1)
+	for age in age_groups:
+		df2[age + '_total'] = df2[age].cumsum()
+		df2[age + '_total_p'] = 100*df2[age + '_total']/df2['total']
+
+	return df2

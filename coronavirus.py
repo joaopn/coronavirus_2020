@@ -317,7 +317,7 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 	#label_3 = 'Increase factor (previous {:d} days)'.format(m_days)
 
 	ax.bar(data=df, x='date', height=datatype, color=color,**kwargs)
-	ax.plot(df_pred['date'], df_pred['prediction'], color=color_pred,lw=3,**kwargs)
+	ax.plot(df_pred['date'], df_pred['prediction'],'D', fillstyle='full',color=color_pred,lw=3,**kwargs)
 	#ax.bar(data=df_pred, x='date', height='prediction', color=color_pred,**kwargs)
 
 	ax2 = ax.twinx() 
@@ -343,7 +343,7 @@ def plot_prediction_m(file, days_pred = 3, m_days=3, title=None, datatype = 'con
 
 	#custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
 	#ax2.legend(custom_lines, [label_1, label_2, label_3], framealpha=1, facecolor='white', loc='upper left')
-	custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=4), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
+	custom_lines = [Line2D([0], [0], color=color, lw=4), Line2D([0], [0], color=color_pred, lw=0, marker='D'), Line2D([0], [0], linestyle='--', lw=2, color=color_m)]
 	ax.legend(custom_lines, [labels[0], labels[1], labels[2]], framealpha=0, facecolor='white', loc='upper left')
 	plt.tight_layout()
 
@@ -536,8 +536,10 @@ def update_website(lang='all', savefig=True):
 
 		str_save = 'evolution_en'
 
-	ax_cases.set_xticklabels(np.arange(0,30,4))
-	ax_deaths.set_xticklabels(np.arange(0,30,4))
+	date_range_cases = df['date'].max() - datetime.fromisoformat('2020-03-01')
+	date_range_deaths = df['date'].max() - datetime.fromisoformat('2020-03-09')
+	ax_cases.set_xticklabels(np.arange(0,5000,4))
+	ax_deaths.set_xticklabels(np.arange(0,5000,4))
 	ax_cases.set_ylabel('')
 	ax_deaths.set_ylabel('')
 
@@ -552,15 +554,42 @@ def update_website(lang='all', savefig=True):
 		plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 		plt.close('all')
 
-def plot_evolution_age_rki(file):
+def plot_evolution_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+']):
 
-	#From PopulationPyramid.net, data from 2019
-	german_distribution_avg = {'A15-A34':0.227686061, 'A35-A59':0.350849027, 'A60-A79':0.214771991, 'A80+':0.06869733, 'A05-A14':0.090251541, 'A00-A04': 0.04774405}
+	#Parses input
+	if variable not in ['AnzahlFall', 'AnzahlTodesfall']:
+		ValueError('Invalid variable. Valid options: "AnzahlFall", "AnzahlTodesfall"')
 
-	#Manipulates df
-	df = pd.read_csv(file)
-	df['date'] = pd.to_datetime(df['date'])
-	
+	#Empty dict that stores colors from data plots and reuses for '--'' plots
+	age_colors = dict.fromkeys(age_groups)
+
+	#Plots results
+	if ax is None:
+		fig = plt.figure()
+		ax = plt.gca()
+
+	for age in age_groups:
+		p = ax.plot(df_age.index, df_age[age + '_total_p'], label=age, color=age_colors[age], linewidth=3)
+		age_colors[age] = p[-1].get_color()
+	plt.legend()
+
+	#Plots comparison to population distribution
+	if variable == 'AnzahlFall':
+
+		#From PopulationPyramid.net, data from 2019
+		german_distribution_avg = {'A15-A34':0.227686061, 'A35-A59':0.350849027, 'A60-A79':0.214771991, 'A80+':0.06869733, 'A05-A14':0.090251541, 'A00-A04': 0.04774405}
+
+		for age in age_groups:
+			ax.plot(df_age.index, 100*np.ones(len(df_age.index))*german_distribution_avg[age], '--', color=age_colors[age],linewidth=3)
+
+	#Beautifies plots
+	ax.set_xlabel('date')
+	ax.set_ylabel('%')
+	ax.set_title(variable)
+	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	x_max = df_age.index.max()
+	x_min = x_max - pd.to_timedelta(delta_x,unit='d')
+	plt.xlim([x_min, x_max])
 
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':

@@ -554,7 +554,24 @@ def update_website(lang='all', savefig=True):
 		plt.savefig(folder_daily + datetime.now().strftime("%Y_%m_%d_") + str_save + '.png', dpi = 200)
 		plt.close('all')
 
-def plot_evolution_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+']):
+def age_distribution(location):
+
+	if location is 'Germany':
+		#From PopulationPyramid.net, data from 2019
+		age_distribution = {'A15-A34':0.227686061, 'A35-A59':0.350849027, 'A60-A79':0.214771991, 'A80+':0.06869733, 'A05-A14':0.090251541, 'A00-A04': 0.04774405}
+
+	elif location is 'Niedersachsen':
+		pass
+
+	elif location is 'Goettingen':
+		pass
+
+	else:
+		ValueError('Invalid location')
+
+	return age_distribution
+
+def plot_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+'], location='Germany'):
 
 	#Parses input
 	if variable not in ['AnzahlFall', 'AnzahlTodesfall']:
@@ -574,13 +591,13 @@ def plot_evolution_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=Non
 	plt.legend()
 
 	#Plots comparison to population distribution
-	if variable == 'AnzahlFall':
+	if variable == 'AnzahlFall' and location == 'Germany':
 
-		#From PopulationPyramid.net, data from 2019
-		german_distribution_avg = {'A15-A34':0.227686061, 'A35-A59':0.350849027, 'A60-A79':0.214771991, 'A80+':0.06869733, 'A05-A14':0.090251541, 'A00-A04': 0.04774405}
+		#Gets age distribution from static data
+		age_dist = age_distribution(location)
 
 		for age in age_groups:
-			ax.plot(df_age.index, 100*np.ones(len(df_age.index))*german_distribution_avg[age], '--', color=age_colors[age],linewidth=3)
+			ax.plot(df_age.index, 100*np.ones(len(df_age.index))*age_dist[age], '--', color=age_colors[age],linewidth=3)
 
 	#Beautifies plots
 	ax.set_xlabel('date')

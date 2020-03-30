@@ -1,0 +1,6 @@
+RKI cases:
+https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services
+
+JHU endpoint:
+https://services1.arcgis.com/0MSEUqKaxRlEPj5g/ArcGIS/rest/services/ncov_cases/FeatureServer/1
+

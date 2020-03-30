@@ -157,7 +157,7 @@ def download_rki_idlandkreis(idlandkreis_list=['03159']):
 
 	return df
 
-def download_rki():
+def download_rki(save=None):
 
 	#Gets all unique idlandkreis from data
 	url_id = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=0%3D0&objectIds=&time=&resultType=none&outFields=idLandkreis&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=true&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
@@ -170,9 +170,15 @@ def download_rki():
 
 	df = download_rki_idlandkreis(unique_ids)
 
+	if save not in [None, 'now']:
+		df.to_csv(save, index=False)
+	elif save == 'now':
+		str_save = datetime.now().strftime('data/rki_data_%y_%m_%d_T%H_%M.csv')
+		df.to_csv(str_save, index=False)
+
 	return df
 
-def load_rki_age(file, variable='AnzahlFall'):
+def load_rki_age(file, variable='AnzahlFall', landkreis = None, bundesland = None):
 
 	if variable not in ['AnzahlFall', 'AnzahlTodesfall']:
 		ValueError('Invalid variable. Valid options: "AnzahlFall", "AnzahlTodesfall"')
@@ -189,7 +195,12 @@ def load_rki_age(file, variable='AnzahlFall'):
 	#Creates df with only age data
 	df2 = pd.DataFrame(index=idx)
 	for age in age_groups:
-		df_temp = df[df['Altersgruppe']==age].sort_values('date').groupby('date')[['date',variable]].sum()
+
+		if landkreis is None:
+			idx = df['Altersgruppe']==age
+
+
+		df_temp = df[idx].sort_values('date').groupby('date')[['date',variable]].sum()
 		df_temp = df_temp.reindex(idx, fill_value=0)
 		df2[age] = df_temp
 

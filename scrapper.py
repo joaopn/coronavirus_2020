@@ -196,11 +196,13 @@ def load_rki_age(file, variable='AnzahlFall', landkreis = None, bundesland = Non
 	df2 = pd.DataFrame(index=idx)
 	for age in age_groups:
 
-		if landkreis is None:
-			idx = df['Altersgruppe']==age
+		if landkreis is None and bundesland is None:
+			idx = (df['Altersgruppe']==age).index
+		elif landkres is None:
+			idx =  df.loc[(df.Landkreis == 'SK Bayreuth') & (df.Altersgruppe == 'A15-A34')]['Altersgruppe'].index
 
 
-		df_temp = df[idx].sort_values('date').groupby('date')[['date',variable]].sum()
+		df_temp = df.iloc[idx].sort_values('date').groupby('date')[['date',variable]].sum()
 		df_temp = df_temp.reindex(idx, fill_value=0)
 		df2[age] = df_temp
 

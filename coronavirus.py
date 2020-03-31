@@ -571,14 +571,19 @@ def age_distribution(location):
 
 	return age_distribution
 
-def plot_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+'], location='Germany'):
+def plot_age_distribution_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+'], location='Germany'):
+
+	#Colors
+	color_ages = {'A00-A04': '#1f77b4ff',
+	'A05-A14': '#ff7f0eff' ,'A15-A34': '#2ca02cff',
+	'A35-A59': '#d62728ff', 'A60-A79': '#9467bdff' , 'A80+':'#8c564bff'}
 
 	#Parses input
 	if variable not in ['AnzahlFall', 'AnzahlTodesfall']:
 		ValueError('Invalid variable. Valid options: "AnzahlFall", "AnzahlTodesfall"')
 
 	#Empty dict that stores colors from data plots and reuses for '--'' plots
-	age_colors = dict.fromkeys(age_groups)
+	#age_colors = dict.fromkeys(all_ages)
 
 	#Plots results
 	if ax is None:
@@ -586,9 +591,9 @@ def plot_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_gro
 		ax = plt.gca()
 
 	for age in age_groups:
-		p = ax.plot(df_age.index, df_age[age + '_total_p'], label=age, color=age_colors[age], linewidth=3)
-		age_colors[age] = p[-1].get_color()
-	plt.legend()
+		#p = ax.plot(df_age.index, df_age[age + '_total_p'], label=age, color=age_colors[age], linewidth=3)
+		p = ax.plot(df_age.index, df_age[age + '_total_p'], label=age, color=color_ages[age], linewidth=3)
+		#age_colors[age] = p[-1].get_color()
 
 	#Plots comparison to population distribution
 	if variable == 'AnzahlFall' and location == 'Germany':
@@ -597,16 +602,115 @@ def plot_age_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=None, age_gro
 		age_dist = age_distribution(location)
 
 		for age in age_groups:
-			ax.plot(df_age.index, 100*np.ones(len(df_age.index))*age_dist[age], '--', color=age_colors[age],linewidth=3)
+			#ax.plot(df_age.index, 100*np.ones(len(df_age.index))*age_dist[age], '--', color=age_colors[age],linewidth=2)
+			ax.plot(df_age.index, 100*np.ones(len(df_age.index))*age_dist[age], '--', color=color_ages[age],linewidth=2)
 
 	#Beautifies plots
+	ax.autoscale()
 	ax.set_xlabel('date')
 	ax.set_ylabel('%')
 	ax.set_title(variable)
 	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	x_max = df_age.index.max()
 	x_min = x_max - pd.to_timedelta(delta_x,unit='d')
-	plt.xlim([x_min, x_max])
+	ax.set_xlim([x_min, x_max])
+
+def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundesland = None, savefig = None):
+
+	#Downloads entire dataset from RKI
+	if file is None:
+		file = 'data/rki_latest.csv'
+		download_rki(file)
+
+	#Creates figure
+	fig = plt.figure(figsize=(8,9))
+	gs = fig.add_gridspec(2,2)
+	ax_total = fig.add_subplot(gs[0,0])
+	ax_cases = fig.add_subplot(gs[0,1])
+	ax_deaths = fig.add_subplot(gs[1,1])
+	ax_cases_old = fig.add_subplot(gs[1,0])
+
+	#Loads dfs
+	df_cases = load_rki_age(file, variable='AnzahlFall', landkreis = landkreis, bundesland = bundesland)
+	df_deaths = load_rki_age(file, variable='AnzahlTodesfall', landkreis = landkreis, bundesland = bundesland)
+
+	#Plots total cases and deaths
+	str_label_cases = 'Confirmed cases: {:d}'.format(df_cases.total[-1]) 
+	str_label_deaths = 'Deaths: {:d}'.format(df_deaths.total[-1]) 
+	ax_total.plot(df_cases.index, df_cases.total, label=str_label_cases, linewidth=3, color='k')
+	ax_total.plot(df_deaths.index, df_deaths.total, 'D', label=str_label_deaths,linewidth=3, color='k')
+
+	#Plots cases and deaths age distribution
+	plot_age_distribution_rki(df_cases, variable = 'AnzahlFall', delta_x=delta_x, ax=ax_cases, location=location)
+	plot_age_distribution_rki(df_deaths, variable = 'AnzahlTodesfall', delta_x=delta_x, ax=ax_deaths, location=location)
+	plot_age_distribution_rki(df_cases, variable = 'AnzahlFall', delta_x=delta_x, ax=ax_cases_old, location=location, age_groups = ['A60-A79', 'A80+'])
+
+	#Beautifies plots
+	# ax_cases.autoscale()
+	# ax_deaths.autoscale()
+	# ax_cases_old.autoscale()
+	ax_total.set_yscale('log')
+	ax_total.set_ylim([1,ax_total.get_ylim()[1]])
+	#ax_cases.set_ylim([0,80])
+	ax_cases_old.set_ylim([0,ax_cases_old.get_ylim()[1]])
+	#ax_deaths.set_ylim([0,100])
+	ax_cases.legend(loc='upper center',ncol=2, fancybox=True, shadow=True)
+
+	#Sets x_range to range with cases
+	x_max = df_cases.index.max()
+	x_min_cases = df_cases[df_cases.total > 0].index.min()
+	x_min_delta = x_max - pd.to_timedelta(delta_x,unit='d')
+	x_min = max(x_min_cases, x_min_delta)
+	ax_total.set_xlim([x_min, x_max])
+	ax_cases.set_xlim([x_min, x_max])
+	ax_cases_old.set_xlim([x_min, x_max])
+	ax_deaths.set_xlim([x_min, x_max])
+
+	ax_total.legend(loc='upper left', framealpha=0)
+	ax_total.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+
+	ax_total.set_title('Total')
+	ax_cases.set_title('% of cases of age groups')
+	ax_deaths.set_title('% of deaths of age group')
+	ax_cases_old.set_title('% of cases for A60+')
+
+	ax_cases.set_xlabel('')
+	ax_deaths.set_xlabel('')
+	ax_cases_old.set_xlabel('')
+
+
+
+	plt.suptitle(location, y=1)
+	str_ann = 'updated: ' + datetime.now().strftime("%d/%m/%Y") + '\n data source: Robert Koch Institute'
+	ax_deaths.annotate(str_ann, xy=(1,0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
+
+	plt.tight_layout()
+
+	if savefig is not None:
+		plt.savefig(savefig, dpi=200)
+		plt.close('all')
+
+def update_age(file=None, delta_x=21):
+
+	if file is None:
+		file = 'data/rki_latest.csv'
+		download_rki(file)
+
+	#Creates the local plots
+	str_germany = 'plots/germany/age_germany.png'
+	str_lowersaxony = 'plots/germany/age_lowersaxony.png'
+	str_goettingen = 'plots/germany/age_goettingen.png'
+
+	plot_age(file, delta_x, location='Germany', landkreis = None, bundesland = None, savefig = str_germany)
+	plot_age(file, delta_x, location='Lower Saxony', landkreis = None, bundesland = 'Niedersachsen', savefig = str_lowersaxony)
+	plot_age(file, delta_x, location='LK Göttingen', landkreis = 'LK Göttingen', bundesland = None, savefig = str_goettingen)
+	
+	#Bundesland plots
+	states = ['Rheinland-Pfalz', 'Nordrhein-Westfalen', 'Hessen', 'Sachsen','Schleswig-Holstein', 'Baden-Württemberg', 'Mecklenburg-Vorpommern', 'Bayern', 'Sachsen-Anhalt','Niedersachsen', 'Berlin', 'Thüringen', 'Brandenburg', 'Hamburg', 'Bremen', 'Saarland']
+
+	for bundesland in states:
+		str_save = 'plots/germany/bundesland/' + bundesland.replace("ü", "ue").lower() + '.png'
+		plot_age(file, delta_x, location=bundesland, landkreis = None, bundesland = bundesland, savefig = str_save)
 
 #Runs coronavirus.py to update plots
 if __name__ == '__main__':
@@ -617,3 +721,4 @@ if __name__ == '__main__':
 
 	update_website('all')
 	update_countries(days_pred, m_days)
+	update_age()

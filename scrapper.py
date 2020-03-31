@@ -77,7 +77,7 @@ def download_johnhopkins(case_type = 'confirmed', df_type='field'):
 
 	return df
 
-def download_rki(single_date):
+def download_rki_date(single_date):
 	# url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0//query?where=Meldedatum%3D%272020-03-21'
 	# + '%27&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 
@@ -197,12 +197,15 @@ def load_rki_age(file, variable='AnzahlFall', landkreis = None, bundesland = Non
 	for age in age_groups:
 
 		if landkreis is None and bundesland is None:
-			idx = (df['Altersgruppe']==age).index
-		elif landkres is None:
-			idx =  df.loc[(df.Landkreis == 'SK Bayreuth') & (df.Altersgruppe == 'A15-A34')]['Altersgruppe'].index
+			df_temp = df.loc[df.Altersgruppe == age]
+		elif landkreis is not None and bundesland is None:
+			df_temp =  df.loc[(df.Landkreis == landkreis) & (df.Altersgruppe == age)]
+		elif landkreis is None and bundesland is not None:
+			df_temp =  df.loc[(df.Bundesland == bundesland) & (df.Altersgruppe == age)]
+		else:
+			ValueError('landkreis and bundesland cannot be simultaneously set.')
 
-
-		df_temp = df.iloc[idx].sort_values('date').groupby('date')[['date',variable]].sum()
+		df_temp = df_temp.sort_values('date').groupby('date')[['date',variable]].sum()
 		df_temp = df_temp.reindex(idx, fill_value=0)
 		df2[age] = df_temp
 

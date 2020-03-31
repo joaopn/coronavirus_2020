@@ -480,10 +480,10 @@ def update_website(lang='all', savefig=True):
 		plt.close('all')
 
 	#Plots prediction with m
-	fig = plt.figure(figsize=(9,3.5))
-	gs = fig.add_gridspec(1,2)
-	ax_germany = fig.add_subplot(gs[0])
-	ax_lowersaxony = fig.add_subplot(gs[1])
+	fig = plt.figure(figsize=(5,7))
+	gs = fig.add_gridspec(2,1)
+	ax_germany = fig.add_subplot(gs[0,0])
+	ax_lowersaxony = fig.add_subplot(gs[1,0])
 
 	plot_prediction_m('data/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_germany, title=ylabel_de)
 	plot_prediction_m('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels_m, ax=ax_lowersaxony, title = ylabel_ls)
@@ -492,8 +492,8 @@ def update_website(lang='all', savefig=True):
 	ax_lowersaxony.set_xlabel(xlabel)
 
 	ax_lowersaxony.annotate(str_ann, xy=(1,-0.01), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
-	ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
-	ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+	#ax_germany.annotate('A', xy=(-0.12,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
+	#ax_lowersaxony.annotate('B', xy=(-0.10,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')
 	
 	plt.tight_layout()
 
@@ -610,7 +610,7 @@ def plot_age_distribution_rki(df_age, variable = 'AnzahlFall', delta_x = 30, ax=
 	ax.set_xlabel('date')
 	ax.set_ylabel('%')
 	ax.set_title(variable)
-	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	#ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	x_max = df_age.index.max()
 	x_min = x_max - pd.to_timedelta(delta_x,unit='d')
 	ax.set_xlim([x_min, x_max])
@@ -623,7 +623,7 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 		download_rki(file)
 
 	#Creates figure
-	fig = plt.figure(figsize=(8,9))
+	fig = plt.figure(figsize=(8,8))
 	gs = fig.add_gridspec(2,2)
 	ax_total = fig.add_subplot(gs[0,0])
 	ax_cases = fig.add_subplot(gs[0,1])
@@ -635,8 +635,8 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 	df_deaths = load_rki_age(file, variable='AnzahlTodesfall', landkreis = landkreis, bundesland = bundesland)
 
 	#Plots total cases and deaths
-	str_label_cases = 'Confirmed cases: {:d}'.format(df_cases.total[-1]) 
-	str_label_deaths = 'Deaths: {:d}'.format(df_deaths.total[-1]) 
+	str_label_cases = 'total cases: {:d}'.format(df_cases.total[-1]) 
+	str_label_deaths = 'deaths: {:d}'.format(df_deaths.total[-1]) 
 	ax_total.plot(df_cases.index, df_cases.total, label=str_label_cases, linewidth=3, color='k')
 	ax_total.plot(df_deaths.index, df_deaths.total, 'D', label=str_label_deaths,linewidth=3, color='k')
 
@@ -654,7 +654,8 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 	#ax_cases.set_ylim([0,80])
 	ax_cases_old.set_ylim([0,ax_cases_old.get_ylim()[1]])
 	#ax_deaths.set_ylim([0,100])
-	ax_cases.legend(loc='upper center',ncol=2, fancybox=True, shadow=True)
+	ax_cases.legend(loc='upper center',ncol=2, fancybox=False, shadow=False, framealpha=0.5)
+
 
 	#Sets x_range to range with cases
 	x_max = df_cases.index.max()
@@ -666,18 +667,30 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 	ax_cases_old.set_xlim([x_min, x_max])
 	ax_deaths.set_xlim([x_min, x_max])
 
+	#Rotate xticks
+	rot_angle = 45
+	ax_total.set_xticklabels(ax_total.get_xticklabels(), rotation=rot_angle)
+	ax_cases_old.set_xticklabels(ax_cases_old.get_xticklabels(), rotation=rot_angle)
+	ax_cases.set_xticklabels(ax_cases.get_xticklabels(), rotation=rot_angle)
+	ax_deaths.set_xticklabels(ax_deaths.get_xticklabels(), rotation=rot_angle)
+
 	ax_total.legend(loc='upper left', framealpha=0)
 	ax_total.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	ax_cases.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	ax_cases_old.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	ax_deaths.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 
 	ax_total.set_title('Total')
-	ax_cases.set_title('% of cases of age groups')
-	ax_deaths.set_title('% of deaths of age group')
-	ax_cases_old.set_title('% of cases for A60+')
+	ax_cases.set_title('% of total cases in age group')
+	ax_deaths.set_title('% of total deaths in age group')
+	ax_cases_old.set_title('% of total cases for A60+')
 
 	ax_cases.set_xlabel('')
 	ax_deaths.set_xlabel('')
 	ax_cases_old.set_xlabel('')
-
+	ax_cases.set_ylabel('')
+	ax_deaths.set_ylabel('')
+	ax_cases_old.set_ylabel('')
 
 
 	plt.suptitle(location, y=1)

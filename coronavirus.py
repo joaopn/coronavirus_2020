@@ -725,13 +725,7 @@ def update_age(file=None, delta_x=21):
 		str_save = 'plots/germany/bundesland/' + bundesland.replace("ü", "ue").lower() + '.png'
 		plot_age(file, delta_x, location=bundesland, landkreis = None, bundesland = bundesland, savefig = str_save)
 
-#Runs coronavirus.py to update plots
-if __name__ == '__main__':
-
-	#Parameters
-	days_pred = 3
-	m_days = 3
-
+def update_all():
 	update_website('all')
-	update_countries(days_pred, m_days)
+	update_countries(3, 3)
 	update_age()

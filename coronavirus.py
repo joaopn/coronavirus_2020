@@ -72,7 +72,7 @@ def get_data():
 
 	return df
 
-def plot_countries(df,country_list, lag_countries=None, variable='confirmed', xmin='2020-02-21', ymin=1,ax=None,savefig=None, plot_order=None, plot_color = None, **kwargs):
+def plot_countries(df,country_list, lag_countries=None, variable='confirmed', xmin='2020-02-21', ymin=1,ax=None,savefig=None, plot_order=None, plot_color = None, xlabel_days=False,**kwargs):
 
 	#Set defaults
 	if ax is None:
@@ -91,11 +91,22 @@ def plot_countries(df,country_list, lag_countries=None, variable='confirmed', xm
 	#Copies relevant data and aligns it
 	df2 = df[df['Country/Region'].isin(country_list)]
 
-	if lag_countries is not None:
+	if lag_countries is not None and xlabel_days is False:
 		lag_dict = dict(zip(country_list, lag_countries))
 		df2['date_lag'] = df2['date'] - df2['Country/Region'].apply(lambda x:pd.to_timedelta(lag_dict[x], unit='d'))
 		x_var = 'date_lag'
+
+	elif lag_countries is not None and xlabel_days is True:
+		lag_dict = dict(zip( country_list, lag_countries))
+		df2['date_lag'] = df2['date'] - df2['Country/Region'].apply(lambda x:pd.to_timedelta(lag_dict[x], unit='d')) - datetime.fromisoformat(xmin)
+		df2['date_lag_days'] = df2['date_lag'].apply(lambda x: x.days)
+
+		x_var = 'date_lag_days'	
+			
+		#return df2
 	else:
+		x_lim_0 = pd.Timestamp(xmin)
+		x_lim_1 = df2[x_var].max() + pd.to_timedelta(1, unit='d')
 		x_var = 'date'
 
 	for i in range(len(country_list)):
@@ -107,17 +118,27 @@ def plot_countries(df,country_list, lag_countries=None, variable='confirmed', xm
 	#Beautifies plot
 	ax.set_yscale('log')
 
-	#Sets limits
-	x_lim_0 = pd.Timestamp(xmin)
-	x_lim_1 = df2[x_var].max() + pd.to_timedelta(1, unit='d')
+	#Sets Y
 	y_lim_0 = ymin
 	y_lim_1 = np.power(10,np.ceil(np.log10(df2[variable].max())))
-
-	ax.set_xlim([x_lim_0, x_lim_1])
 	ax.set_ylim([y_lim_0, y_lim_1])
 	ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
+
+	#Sets X
+	if xlabel_days is False:
+		x_lim_0 = pd.Timestamp(xmin)
+		x_lim_1 = df2[x_var].max() + pd.to_timedelta(1, unit='d')
+		ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+
+	else:
+		x_lim_0 = 0
+		x_lim_1 = df2[x_var].max()
+
+	ax.set_xlim([x_lim_0, x_lim_1])
+	
+	
 	#ax.xaxis.set_major_locator(mdates.DayLocator())
-	ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+	
 	#ax.autoscale(enable=True,axis='y', tight=True)
 
 	plt.tight_layout()
@@ -512,8 +533,8 @@ def update_website(lang='all', savefig=True):
 	df = get_data()
 	#plot_countries(df,countries_list,variable='current', lag_countries=[0,-7.5,-10], xmin='2020-03-01', ylim=[100,1e5], ax=ax_cases,**{'linewidth':4, 'palette': color_palette})
 	#plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xmin='2020-03-09', ymin=1,ax=ax_deaths,**{'linewidth':4, 'palette': color_palette})
-	plot_countries(df,countries_list,variable='confirmed', lag_countries=[-0.5,-7.5,-10], xmin='2020-03-01', ymin = 100,  ax=ax_cases, plot_order=[100,10,1], plot_color=color_palette, **{'linewidth':4})
-	plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xmin='2020-03-09', ymin = 1, ax=ax_deaths, plot_order=[100,10,1], plot_color=color_palette,  **{'linewidth':4})
+	plot_countries(df,countries_list,variable='confirmed', lag_countries=[-0.5,-7.5,-10], xmin='2020-03-01', ymin = 100,  ax=ax_cases, plot_order=[100,10,1], plot_color=color_palette, xlabel_days=True, **{'linewidth':4})
+	plot_countries(df,countries_list,variable='deaths', lag_countries=[0,-17,-18], xmin='2020-03-09', ymin = 1, ax=ax_deaths, plot_order=[100,10,1], plot_color=color_palette, xlabel_days=True, **{'linewidth':4})
 
 	if lang == 'de':
 
@@ -540,12 +561,8 @@ def update_website(lang='all', savefig=True):
 	#df_de = df[df['Country/Region']=='Germany']
 	#date_range_cases = df_de['date'].max() - datetime.fromisoformat('2020-03-01')
 	#date_range_deaths = df_de['date'].max() - datetime.fromisoformat('2020-03-09')
-	ax_cases.set_xticklabels('')
-	ax_deaths.set_xticklabels('')
 	ax_cases.set_ylabel('')
 	ax_deaths.set_ylabel('')
-	ax_cases.set_xlabel('')
-	ax_deaths.set_xlabel('')
 
 	ax_deaths.annotate(str_ann, xy=(1,-0.02), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 	ax_cases.annotate('A', xy=(-0.19,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')

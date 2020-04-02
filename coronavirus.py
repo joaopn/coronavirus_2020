@@ -536,10 +536,12 @@ def update_website(lang='all', savefig=True):
 
 		str_save = 'evolution_en'
 
-	date_range_cases = df['date'].max() - datetime.fromisoformat('2020-03-01')
-	date_range_deaths = df['date'].max() - datetime.fromisoformat('2020-03-09')
-	ax_cases.set_xticklabels(np.arange(0,5000,4))
-	ax_deaths.set_xticklabels(np.arange(0,5000,4))
+	#Aligns to Germany
+	#df_de = df[df['Country/Region']=='Germany']
+	#date_range_cases = df_de['date'].max() - datetime.fromisoformat('2020-03-01')
+	#date_range_deaths = df_de['date'].max() - datetime.fromisoformat('2020-03-09')
+	ax_cases.set_xticklabels('')
+	ax_deaths.set_xticklabels('')
 	ax_cases.set_ylabel('')
 	ax_deaths.set_ylabel('')
 

@@ -544,6 +544,8 @@ def update_website(lang='all', savefig=True):
 	ax_deaths.set_xticklabels('')
 	ax_cases.set_ylabel('')
 	ax_deaths.set_ylabel('')
+	ax_cases.set_xlabel('')
+	ax_deaths.set_xlabel('')
 
 	ax_deaths.annotate(str_ann, xy=(1,-0.02), xycoords=('axes fraction','figure fraction'), xytext=(0,6), textcoords='offset points', ha='right')
 	ax_cases.annotate('A', xy=(-0.19,0.9), xycoords=('axes fraction','figure fraction'), xytext=(0,7), textcoords='offset points', ha='left', weight='bold')

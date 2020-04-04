@@ -420,7 +420,7 @@ def update_countries(days_pred = 3, m_days = 3):
 	#Restores backend
 	matplotlib.use(old_backend)
 
-def update_website(lang='all', savefig=True):
+def update_website(lang='all', savefig=True, update_csv=False):
 
 	#folder location
 	folder_current = 'plots/'
@@ -434,8 +434,8 @@ def update_website(lang='all', savefig=True):
 
 	#Rare actually useful usage of recursion
 	if lang == 'all':
-		update_website('en')
-		update_website('de')
+		update_website('en', update_csv = True)
+		update_website('de', update_csv = False)
 		return 
 
 	#Plots local short-term forecast
@@ -465,7 +465,29 @@ def update_website(lang='all', savefig=True):
 	ax_lowersaxony = fig.add_subplot(gs[1])
 
 	#Updates RKI data files
+	if update_csv:
+		df_rki = download_rki_bundesland_current()
+		cases_de_now = df_rki.Fallzahl.sum()
+		cases_ns_now = df_rki[df_rki.LAN_ew_GEN == 'Niedersachsen']['Fallzahl'].values[0]
+
+		str_now_de = '{:d}/{:d}/{:d},{:d}'.format(datetime.now().month,datetime.now().day,datetime.now().year,int(cases_de_now))
+		str_now_ns = '{:d}/{:d}/{:d},{:d}'.format(datetime.now().month,datetime.now().day,datetime.now().year,int(cases_ns_now))
+
+		with open('data/germany_confirmed.csv', "a") as file:
+		    file.write(str_now_de)
+		
+		with open('data/lowersaxony_confirmed.csv', "a") as file:
+		    file.write(str_now_ns)	  
+
+	# new_entry_de = {'date':str_now, 'confirmed':cases_de_now}
+	# df_de = pd.read_csv('data/germany_confirmed.csv')
+	# df_de_new = df_de.append(pd.DataFrame([new_entry_de]), ignore_index=True)
+	# df_de_new.to_csv('data/germany_confirmed.csv', index=False)
 	
+	# new_entry_ns = {'date':str_now, 'confirmed':cases_ns_now}
+	# df_ns = pd.read_csv('data/lowersaxony_confirmed.csv')
+	# df_ns_new = df_ns.append(pd.DataFrame([new_entry_ns]), ignore_index=True)
+	# df_ns_new.to_csv('data/lowersaxony_confirmed.csv', index=False)
 
 	#Plots data for Germand and Lower Saxony
 	plot_prediction('data/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany, title=ylabel_de)

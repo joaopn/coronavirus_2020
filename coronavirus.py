@@ -18,22 +18,6 @@ from scrapper import *
 
 def save_csv(countries=['Germany']):
 
-	datatypes = ['current', 'confirmed', 'recovered', 'deaths', 'new']
-
-	folder = 'data/johnhopkins/'
-	if not os.path.exists(folder):
-		os.makedirs(folder)
-
-	df = get_data()
-
-	for country in countries:
-
-		for datatype in datatypes:
-			file_save = folder + country.replace('*','').lower() + '_' + datatype + '.csv'
-			df[df['Country/Region']==country][['date',datatype]].to_csv(file_save, index=False)
-
-def save_csv(countries=['Germany']):
-
 	#datatypes = ['current', 'confirmed', 'recovered', 'deaths', 'new']
 	datatypes = ['confirmed','deaths','new']
 
@@ -132,7 +116,7 @@ def plot_countries(df,country_list, lag_countries=None, variable='confirmed', xm
 
 	else:
 		x_lim_0 = 0
-		x_lim_1 = df2[x_var].max()
+		x_lim_1 = df2[x_var].max() + 3
 
 	ax.set_xlim([x_lim_0, x_lim_1])
 	
@@ -480,8 +464,10 @@ def update_website(lang='all', savefig=True):
 	ax_germany = fig.add_subplot(gs[0])
 	ax_lowersaxony = fig.add_subplot(gs[1])
 
-	#Updates Germany data and plots things
-	save_csv(countries=['Germany'])
+	#Updates RKI data files
+	
+
+	#Plots data for Germand and Lower Saxony
 	plot_prediction('data/germany_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_germany, title=ylabel_de)
 	plot_prediction('data/lowersaxony_confirmed.csv', datatype='confirmed', x_min='2020-03-04', labels=labels, ax=ax_lowersaxony, title = ylabel_ls)
 
@@ -538,8 +524,8 @@ def update_website(lang='all', savefig=True):
 
 	if lang == 'de':
 
-		ax_cases.legend(['Deutschland','Italien', 'Südkorea'])
-		ax_deaths.legend(['Deutschland','Italien', 'Südkorea'])
+		ax_cases.legend(['Deutschland','Italien', 'Südkorea'], loc='upper left')
+		ax_deaths.legend(['Deutschland','Italien', 'Südkorea'], loc='upper left')
 		ax_cases.set_xlabel('Tage seit dem 100. Krankheitsfall')
 		ax_cases.set_title('Coronaerkrankungen')
 		ax_deaths.set_xlabel('Tage seit dem 1. Todesfall')
@@ -548,8 +534,8 @@ def update_website(lang='all', savefig=True):
 		str_save = 'evolution_de'
 
 	elif lang == 'en':
-		ax_cases.legend(['Germany','Italy', 'South Korea'])
-		ax_deaths.legend(['Germany','Italy', 'South Korea'])
+		ax_cases.legend(['Germany','Italy', 'South Korea'], loc='upper left')
+		ax_deaths.legend(['Germany','Italy', 'South Korea'], loc='upper left')
 		ax_cases.set_xlabel('Days since 100th case')
 		ax_cases.set_title('Confirmed cases')
 		ax_deaths.set_xlabel('Days since 1st death')

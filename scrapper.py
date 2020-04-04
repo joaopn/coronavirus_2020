@@ -108,6 +108,22 @@ def download_rki_date(single_date):
 
 	return data_flat
 
+def download_rki_bundesland_current():
+	url_str = "https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%c3%a4lle_in_den_Bundesl%c3%a4ndern/FeatureServer/0/query?where=0%3D0&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=LAN_ew_GEN%2C+Fallzahl%2C+Death&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=none&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
+
+	list_data = []
+
+	with urllib.request.urlopen(url_str) as url:
+		json_data = json.loads(url.read().decode())
+		list_data.append(json_data)
+
+	#Parses list of data
+	n_data = len(list_data[0]['features'])
+	data_flat = []
+	data_flat = [list_data[0]['features'][i]['attributes'] for i in range(n_data)]
+
+	return pd.DataFrame(data_flat)
+
 def download_rki_landkreis(landkreis='LK Göttingen'):
 	
 	url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=Landkreis%3D%27LK+G%C3%B6ttingen%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
@@ -128,7 +144,7 @@ def download_rki_landkreis(landkreis='LK Göttingen'):
 
 	return df
 
-def download_rki_idlandkreis(idlandkreis_list=['03159']):
+def download_rki_idlandkreis(idlandkreis_list=['03159'], sleep=0):
 	
 	df_keys = ['Bundesland', 'Landkreis', 'Altersgruppe', 'Geschlecht', 'AnzahlFall',
        'AnzahlTodesfall', 'Meldedatum', 'NeuerFall']
@@ -138,7 +154,7 @@ def download_rki_idlandkreis(idlandkreis_list=['03159']):
 	count = 0
 	for idlandkreis in idlandkreis_list:
 		count+=1
-		time.sleep(1)
+		time.sleep(sleep)
 		print('Downloading {:d} of {:d}'.format(count, len(idlandkreis_list)))
 		url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=IdLandkreis%3D%27'+ idlandkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 		

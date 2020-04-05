@@ -470,8 +470,8 @@ def update_website(lang='all', savefig=True, update_csv=False):
 		cases_de_now = df_rki.Fallzahl.sum()
 		cases_ns_now = df_rki[df_rki.LAN_ew_GEN == 'Niedersachsen']['Fallzahl'].values[0]
 
-		str_now_de = '{:d}/{:d}/{:d},{:d}'.format(datetime.now().month,datetime.now().day,datetime.now().year,int(cases_de_now))
-		str_now_ns = '{:d}/{:d}/{:d},{:d}'.format(datetime.now().month,datetime.now().day,datetime.now().year,int(cases_ns_now))
+		str_now_de = '{:d}/{:d}/{:d},{:d}\n'.format(datetime.now().month,datetime.now().day,datetime.now().year,int(cases_de_now))
+		str_now_ns = '{:d}/{:d}/{:d},{:d}\n'.format(datetime.now().month,datetime.now().day,datetime.now().year,int(cases_ns_now))
 
 		with open('data/germany_confirmed.csv', "a") as file:
 		    file.write(str_now_de)
@@ -758,3 +758,9 @@ def update_all():
 	update_website('all')
 	update_countries(3, 3)
 	update_age()
+
+if __name__== "__main__":
+
+	update_website('all')
+	update_countries(3, 3)
+

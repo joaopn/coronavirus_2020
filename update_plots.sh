@@ -1,9 +1,14 @@
 #!/bin/bash -e
 
-python3 coronavirus.py
+while true 
+do 
+	git pull
+	python3 coronavirus.py
+	date_now=$(date +'%m/%d/%Y')
+	git add . -A
+	git commit --all -m "Update $date_now"
+	git push
+	echo "Updated for $date_now."
+	sleep 1d; 
+done
 
-date_now=$(date +'%m/%d/%Y')
-
-git add . -A
-git commit --all -m "Update $date_now"
-#git push

@@ -759,6 +759,18 @@ def update_all():
 	update_countries(3, 3)
 	update_age()
 
+def plot_comparison_de():
+
+	df_jhu = download_johnhopkins()
+	df_rki = download_rki()
+
+	df_rki_all['sum_cases'] = df_rki['AnzahlFall']  + df_rki['NeuerFall']
+
+	df_rki = pd.DataFrame()
+	df_rki['date'] = pd.to_datetime(df_rki_all['date'], format='%d-%m-%Y')
+	df_rki['new_sum'] = df_rki.groupby('date')['sum_cases'].sum()
+	df_rki['new'] = df_rki.groupby('date')['AnzahlFall'].sum()
+
 if __name__== "__main__":
 
 	update_website('all')

@@ -145,7 +145,11 @@ def download_rki_landkreis(landkreis='LK Göttingen'):
 	return df
 
 def download_rki_idlandkreis(idlandkreis_list=['03159'], sleep=0):
+
+	#Maximum number of tries
+	try_max = 10
 	
+	#Fields to collect
 	df_keys = ['Bundesland', 'Landkreis', 'Altersgruppe', 'Geschlecht', 'AnzahlFall',
        'AnzahlTodesfall', 'Meldedatum', 'NeuerFall']
 
@@ -153,16 +157,30 @@ def download_rki_idlandkreis(idlandkreis_list=['03159'], sleep=0):
 
 	count = 0
 	for idlandkreis in idlandkreis_list:
+
 		count+=1
-		time.sleep(sleep)
+		count_try = 0
+		
 		print('Downloading {:d} of {:d}'.format(count, len(idlandkreis_list)))
 		url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=IdLandkreis%3D%27'+ idlandkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-		
-		with urllib.request.urlopen(url_str) as url:
-			json_data = json.loads(url.read().decode())
 
-		n_data = len(json_data['features'])
-		data_flat = [json_data['features'][i]['attributes'] for i in range(n_data)]
+		while count_try < try_max:
+			try:
+				time.sleep(sleep)
+				with urllib.request.urlopen(url_str) as url:
+					json_data = json.loads(url.read().decode())
+
+				n_data = len(json_data['features'])
+				data_flat = [json_data['features'][i]['attributes'] for i in range(n_data)]
+
+				break
+
+			except:
+				print('Error. Trying again.')
+				count_try += 1
+
+		if count_try == try_max:
+			raise ValueError('Maximum limit of tries exceeded.')
 
 		df_temp = pd.DataFrame(data_flat)
 	
@@ -173,7 +191,7 @@ def download_rki_idlandkreis(idlandkreis_list=['03159'], sleep=0):
 
 	return df
 
-def download_rki(save=None):
+def download_rki(save=None, sleep=0):
 
 	#Gets all unique idlandkreis from data
 	url_id = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=0%3D0&objectIds=&time=&resultType=none&outFields=idLandkreis&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=true&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
@@ -184,7 +202,7 @@ def download_rki(save=None):
 
 	print('Downloading {:d} unique Landkreise'.format(n_data))
 
-	df = download_rki_idlandkreis(unique_ids)
+	df = download_rki_idlandkreis(unique_ids, sleep)
 
 	if save not in [None, 'now']:
 		df.to_csv(save, index=False)

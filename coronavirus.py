@@ -14,6 +14,8 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 from matplotlib.lines import Line2D
 
+import argparse
+
 from scrapper import *
 
 def save_csv(countries=['Germany']):
@@ -732,11 +734,11 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 		plt.savefig(savefig, dpi=200)
 		plt.close('all')
 
-def update_age(file=None, delta_x=21):
+def update_age(file=None, delta_x=21, sleep=0):
 
 	if file is None:
 		file = 'data/rki_latest.csv'
-		download_rki(file)
+		download_rki(file,sleep=0)
 
 	#Creates the local plots
 	str_germany = 'plots/germany/age_germany.png'
@@ -754,11 +756,6 @@ def update_age(file=None, delta_x=21):
 		str_save = 'plots/germany/bundesland/' + bundesland.replace("ü", "ue").lower() + '.png'
 		plot_age(file, delta_x, location=bundesland, landkreis = None, bundesland = bundesland, savefig = str_save)
 
-def update_all():
-	update_website('all')
-	update_countries(3, 3)
-	update_age()
-
 def plot_comparison_de():
 
 	df_jhu = download_johnhopkins()
@@ -773,6 +770,17 @@ def plot_comparison_de():
 
 if __name__== "__main__":
 
-	update_website('all')
-	update_countries(3, 3)
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--plots",type=str, nargs='?', const=1, default='website')
+	args = parser.parse_args()
+	run_type = args.plots
+	
+	if run_type == 'website':
+		update_website('all')
+	elif run_type == 'countries':
+		update_countries(3, 3)
+	elif run_type == 'age':
+		update_age(delta_x=21,sleep=1)
+	else:
+		ValueError('Invalid --plots.')
 

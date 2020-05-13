@@ -151,7 +151,7 @@ def download_rki_idlandkreis(idlandkreis_list=['03159'], sleep=0):
 	
 	#Fields to collect
 	df_keys = ['Bundesland', 'Landkreis', 'Altersgruppe', 'Geschlecht', 'AnzahlFall',
-       'AnzahlTodesfall', 'Meldedatum', 'NeuerFall']
+	   'AnzahlTodesfall', 'Meldedatum', 'NeuerFall']
 
 	df = pd.DataFrame(columns=df_keys)
 
@@ -162,7 +162,8 @@ def download_rki_idlandkreis(idlandkreis_list=['03159'], sleep=0):
 		count_try = 0
 		
 		print('Downloading {:d} of {:d}'.format(count, len(idlandkreis_list)))
-		url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=IdLandkreis%3D%27'+ idlandkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+		#url_str = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0/query?where=IdLandkreis%3D%27'+ idlandkreis + '%27&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+		url_str = "https://services7.arcgis.com/mOBPykOjAyBO2ZKk/ArcGIS/rest/services/RKI_COVID19/FeatureServer/0//query?where=IdLandkreis%3D" + idlandkreis + "&objectIds=&time=&resultType=none&outFields=Bundesland%2C+Landkreis%2C+IdBundesland%2C+ObjectId%2C+IdLandkreis%2C+Altersgruppe%2C+Geschlecht%2C+AnzahlFall%2C+AnzahlTodesfall%2C+Meldedatum%2C+NeuerFall%2C+Refdatum%2C+Datenstand%2C+NeuGenesen%2C+AnzahlGenesen&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token="
 
 		while count_try < try_max:
 			try:
@@ -212,12 +213,10 @@ def download_rki(save=None, sleep=0):
 
 	return df
 
-def load_rki_age(file, variable='AnzahlFall', landkreis = None, bundesland = None):
+def load_rki_age(file, variable='AnzahlFall', landkreis = None, bundesland = None, age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+']):
 
 	if variable not in ['AnzahlFall', 'AnzahlTodesfall']:
 		ValueError('Invalid variable. Valid options: "AnzahlFall", "AnzahlTodesfall"')
-
-	age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+']
 
 	#Loads df and set dates as datetime
 	df = pd.read_csv(file)

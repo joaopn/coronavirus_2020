@@ -746,11 +746,14 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 		plt.savefig(savefig, dpi=200)
 		plt.close('all')
 
-def update_age(file=None, delta_x=21, sleep=0):
+def update_age(date_min, file=None, sleep=0):
 
 	if file is None:
 		file = 'data/rki_latest.csv'
-		download_rki(file,sleep=0)
+		download_rki(file,sleep=sleep)
+
+	#Switches date to delta_x
+	delta_x = (datetime.today()-datetime.fromisoformat(date_min)).days
 
 	#Creates the local plots
 	str_germany = 'plots/germany/age_germany.png'
@@ -792,7 +795,7 @@ if __name__== "__main__":
 	elif run_type == 'countries':
 		update_countries(3, 3)
 	elif run_type == 'age':
-		update_age(delta_x=60,sleep=1)
+		update_age(date_min='2020-03-15',sleep=1)
 	else:
 		ValueError('Invalid --plots.')
 

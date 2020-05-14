@@ -792,7 +792,7 @@ if __name__== "__main__":
 	elif run_type == 'countries':
 		update_countries(3, 3)
 	elif run_type == 'age':
-		update_age(delta_x=30,sleep=1)
+		update_age(delta_x=60,sleep=1)
 	else:
 		ValueError('Invalid --plots.')
 

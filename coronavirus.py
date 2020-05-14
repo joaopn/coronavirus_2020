@@ -726,7 +726,7 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 	ax_total.set_title('Cases')
 	ax_cases.set_title('% of total cases in age group')
 	ax_deaths.set_title('% of total deaths in age group')
-	ax_cases_old.set_title('% of active cases for A60+')
+	ax_cases_old.set_title('% of total cases for A60+')
 
 	ax_cases.set_xlabel('')
 	ax_deaths.set_xlabel('')

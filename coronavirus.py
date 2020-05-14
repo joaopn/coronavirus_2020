@@ -668,26 +668,17 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 	df_cases_unk = load_rki_age(file, variable='AnzahlFall', landkreis = landkreis, bundesland = bundesland, age_groups = age_groups_unk)
 	df_deaths_unk = load_rki_age(file, variable='AnzahlTodesfall', landkreis = landkreis, bundesland = bundesland, age_groups = age_groups_unk)
 	df_deaths = load_rki_age(file, variable='AnzahlTodesfall', landkreis = landkreis, bundesland = bundesland, age_groups = age_groups)
-	df_rec_unk = load_rki_age(file, variable='AnzahlGenesen', landkreis = landkreis, bundesland = bundesland, age_groups = age_groups_unk)
-
-	#Calculates percentages for active cases
-	df_active = df_cases_unk - df_deaths_unk - df_rec_unk
-	age_groups = ['A00-A04','A05-A14','A15-A34','A35-A59', 'A60-A79', 'A80+']
-	for age in age_groups:
-		df_active[age + '_total'] = df_active[age].cumsum()
-		df_active[age + '_total_p'] = 100*df_active[age + '_total']/df_active['total']
 
 	#Plots total cases and deaths
-	str_label_cases = 'active cases: {:d}'.format(int(df_active.total[-1])) 
+	str_label_cases = 'total cases: {:d}'.format(int(df_cases_unk.total[-1])) 
 	str_label_deaths = 'total deaths: {:d}'.format(int(df_deaths_unk.total[-1])) 
-	ax_total.plot(df_active.index, df_active.total, label=str_label_cases, linewidth=3, color='k')
+	ax_total.plot(df_cases_unk.index, df_cases_unk.total, label=str_label_cases, linewidth=3, color='k')
 	ax_total.plot(df_deaths_unk.index, df_deaths_unk.total, 'D', label=str_label_deaths,linewidth=3, color='k')
 
 	#Plots cases and deaths age distribution
-	df_deaths_unk = load_rki_age(file, variable='AnzahlTodesfall', landkreis = landkreis, bundesland = bundesland, age_groups = age_groups)
-	plot_age_distribution_rki(df_active, variable = 'AnzahlFall', delta_x=delta_x, ax=ax_cases, location=location)
+	plot_age_distribution_rki(df_cases_unk, variable = 'AnzahlFall', delta_x=delta_x, ax=ax_cases, location=location)
 	plot_age_distribution_rki(df_deaths, variable = 'AnzahlTodesfall', delta_x=delta_x, ax=ax_deaths, location=location)
-	plot_age_distribution_rki(df_active, variable = 'AnzahlFall', delta_x=delta_x, ax=ax_cases_old, location=location, age_groups = ['A60-A79', 'A80+'])
+	plot_age_distribution_rki(df_cases_unk, variable = 'AnzahlFall', delta_x=delta_x, ax=ax_cases_old, location=location, age_groups = ['A60-A79', 'A80+'])
 
 	#Beautifies plots
 	# ax_cases.autoscale()
@@ -702,8 +693,8 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 
 
 	#Sets x_range to range with cases
-	x_max = df_active.index.max()
-	x_min_cases = df_active[df_active.total > 0].index.min()
+	x_max = df_cases_unk.index.max()
+	x_min_cases = df_cases_unk[df_cases_unk.total > 0].index.min()
 	x_min_delta = x_max - pd.to_timedelta(delta_x,unit='d')
 	x_min = max(x_min_cases, x_min_delta)
 	ax_total.set_xlim([x_min, x_max])
@@ -713,8 +704,8 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 
 
 	#Sets total cases ylim manually, because MPL is retarded
-	total_xlim_min = min(df_active.total[x_min], df_deaths_unk.total[x_min])
-	total_xlim_max = max(df_active.total[x_max], df_deaths_unk.total[x_max])
+	total_xlim_min = min(df_cases_unk.total[x_min], df_deaths_unk.total[x_min])
+	total_xlim_max = max(df_cases_unk.total[x_max], df_deaths_unk.total[x_max])
 
 	np.power(10,np.floor(np.log10(1242)))
 	ax_total.set_ylim([np.power(10,np.floor(np.log10(total_xlim_min))), np.power(10,np.ceil(np.log10(total_xlim_max)))])
@@ -732,8 +723,8 @@ def plot_age(file=None, delta_x=21, location='Germany', landkreis = None, bundes
 	ax_cases_old.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 	ax_deaths.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 
-	ax_total.set_title('Active')
-	ax_cases.set_title('% of active cases in age group')
+	ax_total.set_title('Cases')
+	ax_cases.set_title('% of total cases in age group')
 	ax_deaths.set_title('% of total deaths in age group')
 	ax_cases_old.set_title('% of active cases for A60+')
 
